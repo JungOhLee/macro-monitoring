@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 import pytest
+import requests
 
 from pipeline.ingest import fred
 
@@ -44,3 +45,28 @@ def test_fetch_empty_raises(monkeypatch):
     monkeypatch.setattr(fred.requests, "get", lambda *a, **k: FakeResp({"observations": []}))
     with pytest.raises(RuntimeError):
         fred.fetch_fred("XXX", "KEY")
+
+
+def test_http_error_sanitized(monkeypatch):
+    monkeypatch.setattr(
+        fred.requests, "get", lambda *a, **k: FakeResp({"irrelevant": True}, status=403)
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        fred.fetch_fred("XXX", "SECRETKEY")
+    assert "api_key" not in str(excinfo.value)
+    assert "403" in str(excinfo.value)
+
+
+def test_connection_error_sanitized(monkeypatch):
+    def fake_get(*a, **k):
+        raise requests.ConnectionError(
+            "HTTPSConnectionPool(host='api.stlouisfed.org', port=443): "
+            "Max retries exceeded with url: "
+            "/fred/series/observations?series_id=X&api_key=TOPSECRET refused"
+        )
+
+    monkeypatch.setattr(fred.requests, "get", fake_get)
+    with pytest.raises(RuntimeError) as excinfo:
+        fred.fetch_fred("X", "TOPSECRET")
+    assert "TOPSECRET" not in str(excinfo.value)
+    assert excinfo.value.__cause__ is None
