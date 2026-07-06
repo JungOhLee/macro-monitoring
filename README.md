@@ -2,7 +2,7 @@
 
 **Live dashboard: https://jungohlee.github.io/macro-monitoring/**
 
-A personal macro-economy monitor: 19 indicators across five pillars
+A personal macro-economy monitor: 21 indicators across five pillars
 (valuation, leverage, liquidity, sentiment, macro stress), each expressed as a
 historical percentile and combined into a 0-100 composite bubble score -
 updated daily by GitHub Actions, with crisis-comparison context.
@@ -21,10 +21,12 @@ updated daily by GitHub Actions, with crisis-comparison context.
   with SVG radar, pre-crisis sequence tracker,
   [backtest page](https://jungohlee.github.io/macro-monitoring/backtest.html)
   with validation criteria and base rates, auto-generated indicator firing
-  timelines on episode pages, and margin-debt data (FINRA manual-source
-  import). Honest caveat: backtest validation currently passes 1 of 4
-  criteria (postcovid), with documented reasons for the other three - see
-  the design doc §13 note. Phase 4 adds scraper-based indicators (AAII,
-  put/call) and threshold tuning against the backtest.
+  timelines on episode pages, margin-debt data (FINRA manual-source import),
+  and Shiller CAPE + equity-risk-premium indicators (valuation pillar now
+  averages Buffett indicator, CAPE, and ERP). Honest caveat: backtest
+  validation currently passes 2 of 4 criteria (postcovid, 2019-quiet-control),
+  with documented reasons for the other two (dotcom, gfc) - see the design
+  doc §13 note. Phase 4 adds scraper-based indicators (AAII, put/call) and
+  threshold tuning against the backtest.
 
 *Monitoring context, not a trading signal.*

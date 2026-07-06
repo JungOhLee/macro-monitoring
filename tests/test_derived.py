@@ -59,6 +59,21 @@ def test_splice_scales_donor():
     assert out["2026-01-02"] == 130.0
 
 
+def test_erp_known_values():
+    cape = pd.Series([25.0], index=pd.to_datetime(["2026-01-31"]))
+    real10y = pd.Series([1.5], index=pd.to_datetime(["2026-01-01"]))
+    out = derived.FORMULAS["erp"](cape, real10y)
+    assert out["2026-01-31"] == pytest.approx(2.5)  # 100/25=4.0 yield - 1.5 real = 2.5
+
+
+def test_erp_nan_before_real10y_starts():
+    cape = pd.Series([20.0, 25.0], index=pd.to_datetime(["2000-01-31", "2026-01-31"]))
+    real10y = pd.Series([1.5], index=pd.to_datetime(["2003-01-02"]))
+    out = derived.FORMULAS["erp"](cape, real10y)
+    assert "2000-01-31" not in out.index  # real10y has no history yet
+    assert out["2026-01-31"] == pytest.approx(2.5)
+
+
 def test_splice_no_overlap_raises():
     donor = pd.Series([1.0], index=pd.to_datetime(["2000-01-01"]))
     primary = pd.Series([2.0], index=pd.to_datetime(["2010-01-01"]))

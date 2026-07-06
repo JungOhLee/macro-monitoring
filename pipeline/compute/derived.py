@@ -51,6 +51,13 @@ def _ratio_dma_distance(a: pd.Series, b: pd.Series) -> pd.Series:
     return _dma_distance(joined.iloc[:, 0] / joined.iloc[:, 1])
 
 
+def _erp(cape: pd.Series, real10y: pd.Series) -> pd.Series:
+    """Equity risk premium, in percentage points: CAPE earnings yield (100/CAPE)
+    minus the 10Y TIPS real yield (DFII10, which only starts in 2003 -- the
+    result is NaN, then dropped, before real10y's history begins)."""
+    return ((100.0 / cape) - asof_align(cape.index, real10y)).dropna()
+
+
 def _splice(primary: pd.Series, donor: pd.Series) -> pd.Series:
     primary, donor = primary.sort_index(), donor.sort_index()
     overlap = donor.index.intersection(primary.index)
@@ -70,6 +77,7 @@ FORMULAS = {
     "dma_distance": _dma_distance,
     "ratio_dma_distance": _ratio_dma_distance,
     "splice": _splice,
+    "erp": _erp,
 }
 
 

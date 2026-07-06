@@ -7,7 +7,7 @@ import yaml
 
 from pipeline import paths
 
-VALID_SOURCES = ("fred", "yahoo", "manual")
+VALID_SOURCES = ("fred", "yahoo", "manual", "shiller")
 VALID_FREQ = ("daily", "weekly", "monthly", "quarterly")
 VALID_DIRECTION = ("normal", "invert")
 VALID_ROLE = ("timing", "magnitude", "confirmation")

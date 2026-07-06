@@ -12,6 +12,7 @@ dependencies = [
     "PyYAML>=6.0",
     "python-dotenv>=1.0",
     "markdown>=3.6",
+    "xlrd>=2.0",
 ]
 
 [project.optional-dependencies]

@@ -1,5 +1,6 @@
 episode,offset_months,indicator_id,percentile
 dotcom,-24,buffett,100.0
+dotcom,-24,cape,100.0
 dotcom,-24,baa_spread,62.57
 dotcom,-24,household_debt_gdp,100.0
 dotcom,-24,corporate_debt_gdp,94.21
@@ -12,6 +13,7 @@ dotcom,-24,cfnai_act,63.27
 dotcom,-24,spx_200dma_dist,6.41
 dotcom,-24,dollar_spliced,53.71
 dotcom,-18,buffett,98.96
+dotcom,-18,cape,99.5
 dotcom,-18,baa_spread,8.71
 dotcom,-18,household_debt_gdp,99.48
 dotcom,-18,corporate_debt_gdp,100.0
@@ -24,6 +26,7 @@ dotcom,-18,cfnai_act,63.19
 dotcom,-18,spx_200dma_dist,72.78
 dotcom,-18,dollar_spliced,53.05
 dotcom,-12,buffett,100.0
+dotcom,-12,cape,100.0
 dotcom,-12,baa_spread,14.87
 dotcom,-12,household_debt_gdp,100.0
 dotcom,-12,corporate_debt_gdp,100.0
@@ -36,6 +39,7 @@ dotcom,-12,cfnai_act,69.35
 dotcom,-12,spx_200dma_dist,19.08
 dotcom,-12,dollar_spliced,49.76
 dotcom,-9,buffett,100.0
+dotcom,-9,cape,99.86
 dotcom,-9,baa_spread,28.7
 dotcom,-9,household_debt_gdp,100.0
 dotcom,-9,corporate_debt_gdp,100.0
@@ -48,6 +52,7 @@ dotcom,-9,cfnai_act,69.46
 dotcom,-9,spx_200dma_dist,28.98
 dotcom,-9,dollar_spliced,57.68
 dotcom,-6,buffett,99.49
+dotcom,-6,cape,99.58
 dotcom,-6,baa_spread,11.09
 dotcom,-6,household_debt_gdp,100.0
 dotcom,-6,corporate_debt_gdp,100.0
@@ -60,6 +65,7 @@ dotcom,-6,cfnai_act,73.53
 dotcom,-6,spx_200dma_dist,72.85
 dotcom,-6,dollar_spliced,42.89
 dotcom,-3,buffett,100.0
+dotcom,-3,cape,100.0
 dotcom,-3,baa_spread,47.08
 dotcom,-3,household_debt_gdp,100.0
 dotcom,-3,corporate_debt_gdp,99.49
@@ -72,6 +78,7 @@ dotcom,-3,cfnai_act,20.69
 dotcom,-3,spx_200dma_dist,26.5
 dotcom,-3,dollar_spliced,46.66
 dotcom,-1,buffett,100.0
+dotcom,-1,cape,99.58
 dotcom,-1,baa_spread,42.16
 dotcom,-1,household_debt_gdp,100.0
 dotcom,-1,corporate_debt_gdp,100.0
@@ -85,6 +92,7 @@ dotcom,-1,cfnai_act,75.76
 dotcom,-1,spx_200dma_dist,68.55
 dotcom,-1,dollar_spliced,56.49
 dotcom,0,buffett,100.0
+dotcom,0,cape,99.79
 dotcom,0,baa_spread,27.53
 dotcom,0,household_debt_gdp,100.0
 dotcom,0,corporate_debt_gdp,100.0
@@ -98,6 +106,7 @@ dotcom,0,cfnai_act,30.23
 dotcom,0,spx_200dma_dist,16.44
 dotcom,0,dollar_spliced,56.63
 dotcom,6,buffett,98.5
+dotcom,6,cape,98.96
 dotcom,6,baa_spread,7.59
 dotcom,6,household_debt_gdp,100.0
 dotcom,6,corporate_debt_gdp,100.0
@@ -112,6 +121,7 @@ dotcom,6,cfnai_act,35.86
 dotcom,6,spx_200dma_dist,66.22
 dotcom,6,dollar_spliced,70.49
 dotcom,12,buffett,94.55
+dotcom,12,cape,96.88
 dotcom,12,baa_spread,0.41
 dotcom,12,household_debt_gdp,100.0
 dotcom,12,corporate_debt_gdp,99.01
@@ -126,6 +136,7 @@ dotcom,12,cfnai_act,89.49
 dotcom,12,spx_200dma_dist,96.39
 dotcom,12,dollar_spliced,83.73
 gfc,-24,buffett,90.95
+gfc,-24,cape,92.26
 gfc,-24,baa_spread,61.95
 gfc,-24,household_debt_gdp,100.0
 gfc,-24,corporate_debt_gdp,79.64
@@ -140,6 +151,7 @@ gfc,-24,cfnai_act,15.62
 gfc,-24,spx_200dma_dist,66.5
 gfc,-24,dollar_spliced,6.49
 gfc,-18,buffett,90.58
+gfc,-18,cape,93.68
 gfc,-18,baa_spread,72.99
 gfc,-18,household_debt_gdp,100.0
 gfc,-18,corporate_debt_gdp,81.61
@@ -154,6 +166,7 @@ gfc,-18,cfnai_act,68.4
 gfc,-18,spx_200dma_dist,46.73
 gfc,-18,dollar_spliced,8.25
 gfc,-12,buffett,94.67
+gfc,-12,cape,94.37
 gfc,-12,baa_spread,68.04
 gfc,-12,household_debt_gdp,100.0
 gfc,-12,corporate_debt_gdp,84.89
@@ -168,6 +181,7 @@ gfc,-12,cfnai_act,75.74
 gfc,-12,spx_200dma_dist,40.5
 gfc,-12,dollar_spliced,4.74
 gfc,-9,buffett,94.69
+gfc,-9,cape,94.84
 gfc,-9,baa_spread,83.62
 gfc,-9,household_debt_gdp,100.0
 gfc,-9,corporate_debt_gdp,87.17
@@ -182,6 +196,7 @@ gfc,-9,cfnai_act,84.76
 gfc,-9,spx_200dma_dist,32.27
 gfc,-9,dollar_spliced,4.41
 gfc,-6,buffett,95.15
+gfc,-6,cape,94.53
 gfc,-6,baa_spread,67.85
 gfc,-6,household_debt_gdp,100.0
 gfc,-6,corporate_debt_gdp,91.63
@@ -196,6 +211,7 @@ gfc,-6,cfnai_act,68.26
 gfc,-6,spx_200dma_dist,36.61
 gfc,-6,dollar_spliced,1.94
 gfc,-3,buffett,94.74
+gfc,-3,cape,94.8
 gfc,-3,baa_spread,84.19
 gfc,-3,household_debt_gdp,100.0
 gfc,-3,corporate_debt_gdp,92.54
@@ -210,6 +226,7 @@ gfc,-3,cfnai_act,81.86
 gfc,-3,spx_200dma_dist,32.98
 gfc,-3,dollar_spliced,0.03
 gfc,-1,buffett,94.74
+gfc,-1,cape,94.02
 gfc,-1,baa_spread,39.83
 gfc,-1,household_debt_gdp,100.0
 gfc,-1,corporate_debt_gdp,92.54
@@ -224,6 +241,7 @@ gfc,-1,cfnai_act,67.56
 gfc,-1,spx_200dma_dist,67.41
 gfc,-1,dollar_spliced,0.17
 gfc,0,buffett,93.45
+gfc,0,cape,94.74
 gfc,0,baa_spread,52.27
 gfc,0,household_debt_gdp,100.0
 gfc,0,corporate_debt_gdp,94.32
@@ -238,6 +256,7 @@ gfc,0,cfnai_act,75.82
 gfc,0,spx_200dma_dist,34.93
 gfc,0,dollar_spliced,0.03
 gfc,6,buffett,85.71
+gfc,6,cape,88.81
 gfc,6,baa_spread,2.04
 gfc,6,household_debt_gdp,99.13
 gfc,6,corporate_debt_gdp,98.7
@@ -253,6 +272,7 @@ gfc,6,spx_200dma_dist,84.51
 gfc,6,dollar_spliced,0.1
 gfc,6,margin_debt_yoy,24.19
 gfc,12,buffett,70.82
+gfc,12,cape,54.69
 gfc,12,baa_spread,0.04
 gfc,12,household_debt_gdp,99.14
 gfc,12,corporate_debt_gdp,100.0
@@ -268,6 +288,8 @@ gfc,12,spx_200dma_dist,99.25
 gfc,12,dollar_spliced,6.54
 gfc,12,margin_debt_yoy,8.46
 covid,-24,buffett,98.15
+covid,-24,cape,96.84
+covid,-24,erp,67.4
 covid,-24,baa_spread,83.67
 covid,-24,household_debt_gdp,76.3
 covid,-24,corporate_debt_gdp,97.41
@@ -286,6 +308,8 @@ covid,-24,rsp_spy_breadth,81.66
 covid,-24,dollar_spliced,40.71
 covid,-24,margin_debt_yoy,45.87
 covid,-18,buffett,99.63
+covid,-18,cape,97.15
+covid,-18,erp,73.26
 covid,-18,baa_spread,66.89
 covid,-18,household_debt_gdp,75.37
 covid,-18,corporate_debt_gdp,100.0
@@ -304,6 +328,8 @@ covid,-18,rsp_spy_breadth,78.98
 covid,-18,dollar_spliced,62.07
 covid,-18,margin_debt_yoy,37.5
 covid,-12,buffett,98.54
+covid,-12,cape,95.36
+covid,-12,erp,62.18
 covid,-12,baa_spread,45.2
 covid,-12,household_debt_gdp,74.82
 covid,-12,corporate_debt_gdp,100.0
@@ -322,6 +348,8 @@ covid,-12,rsp_spy_breadth,42.31
 covid,-12,dollar_spliced,61.91
 covid,-12,margin_debt_yoy,18.11
 covid,-9,buffett,98.91
+covid,-9,cape,95.06
+covid,-9,erp,58.67
 covid,-9,baa_spread,47.56
 covid,-9,household_debt_gdp,74.55
 covid,-9,corporate_debt_gdp,99.64
@@ -340,6 +368,8 @@ covid,-9,rsp_spy_breadth,74.12
 covid,-9,dollar_spliced,67.93
 covid,-9,margin_debt_yoy,12.06
 covid,-6,buffett,98.19
+covid,-6,cape,94.53
+covid,-6,erp,47.24
 covid,-6,baa_spread,44.38
 covid,-6,household_debt_gdp,73.91
 covid,-6,corporate_debt_gdp,100.0
@@ -358,6 +388,8 @@ covid,-6,rsp_spy_breadth,91.88
 covid,-6,dollar_spliced,70.14
 covid,-6,margin_debt_yoy,14.23
 covid,-3,buffett,99.64
+covid,-3,cape,95.32
+covid,-3,erp,50.0
 covid,-3,baa_spread,55.39
 covid,-3,household_debt_gdp,73.65
 covid,-3,corporate_debt_gdp,98.92
@@ -376,6 +408,8 @@ covid,-3,rsp_spy_breadth,86.32
 covid,-3,dollar_spliced,67.99
 covid,-3,margin_debt_yoy,26.62
 covid,-1,buffett,88.85
+covid,-1,cape,96.17
+covid,-1,erp,51.96
 covid,-1,baa_spread,63.15
 covid,-1,household_debt_gdp,76.62
 covid,-1,corporate_debt_gdp,100.0
@@ -394,6 +428,8 @@ covid,-1,rsp_spy_breadth,88.95
 covid,-1,dollar_spliced,62.9
 covid,-1,margin_debt_yoy,29.81
 covid,0,buffett,88.85
+covid,0,cape,95.99
+covid,0,erp,40.49
 covid,0,baa_spread,59.72
 covid,0,household_debt_gdp,76.62
 covid,0,corporate_debt_gdp,100.0
@@ -412,6 +448,8 @@ covid,0,rsp_spy_breadth,95.96
 covid,0,dollar_spliced,68.72
 covid,0,margin_debt_yoy,25.19
 covid,6,buffett,100.0
+covid,6,cape,96.24
+covid,6,erp,14.22
 covid,6,baa_spread,29.6
 covid,6,household_debt_gdp,77.86
 covid,6,corporate_debt_gdp,99.64
@@ -430,6 +468,8 @@ covid,6,rsp_spy_breadth,96.25
 covid,6,dollar_spliced,67.43
 covid,6,margin_debt_yoy,53.31
 covid,12,buffett,100.0
+covid,12,cape,97.98
+covid,12,erp,21.2
 covid,12,baa_spread,55.44
 covid,12,household_debt_gdp,75.53
 covid,12,corporate_debt_gdp,98.58
@@ -448,6 +488,8 @@ covid,12,rsp_spy_breadth,3.55
 covid,12,dollar_spliced,50.43
 covid,12,margin_debt_yoy,97.48
 postcovid,-24,buffett,88.85
+postcovid,-24,cape,96.17
+postcovid,-24,erp,51.96
 postcovid,-24,baa_spread,62.67
 postcovid,-24,household_debt_gdp,76.62
 postcovid,-24,corporate_debt_gdp,100.0
@@ -466,6 +508,8 @@ postcovid,-24,rsp_spy_breadth,87.4
 postcovid,-24,dollar_spliced,62.59
 postcovid,-24,margin_debt_yoy,29.81
 postcovid,-18,buffett,100.0
+postcovid,-18,cape,95.04
+postcovid,-18,erp,16.67
 postcovid,-18,baa_spread,19.79
 postcovid,-18,household_debt_gdp,77.86
 postcovid,-18,corporate_debt_gdp,99.64
@@ -484,6 +528,8 @@ postcovid,-18,rsp_spy_breadth,97.67
 postcovid,-18,dollar_spliced,75.19
 postcovid,-18,margin_debt_yoy,33.95
 postcovid,-12,buffett,100.0
+postcovid,-12,cape,97.92
+postcovid,-12,erp,18.98
 postcovid,-12,baa_spread,52.66
 postcovid,-12,household_debt_gdp,75.53
 postcovid,-12,corporate_debt_gdp,98.58
@@ -502,6 +548,8 @@ postcovid,-12,rsp_spy_breadth,7.6
 postcovid,-12,dollar_spliced,49.04
 postcovid,-12,margin_debt_yoy,95.67
 postcovid,-9,buffett,100.0
+postcovid,-9,cape,98.16
+postcovid,-9,erp,45.21
 postcovid,-9,baa_spread,64.37
 postcovid,-9,household_debt_gdp,76.33
 postcovid,-9,corporate_debt_gdp,98.23
@@ -520,6 +568,8 @@ postcovid,-9,rsp_spy_breadth,2.6
 postcovid,-9,dollar_spliced,57.7
 postcovid,-9,margin_debt_yoy,97.86
 postcovid,-6,buffett,99.65
+postcovid,-6,cape,98.52
+postcovid,-6,erp,39.19
 postcovid,-6,baa_spread,70.29
 postcovid,-6,household_debt_gdp,75.7
 postcovid,-6,corporate_debt_gdp,97.89
@@ -538,6 +588,8 @@ postcovid,-6,rsp_spy_breadth,33.2
 postcovid,-6,dollar_spliced,54.07
 postcovid,-6,margin_debt_yoy,90.81
 postcovid,-3,buffett,100.0
+postcovid,-3,cape,98.17
+postcovid,-3,erp,35.56
 postcovid,-3,baa_spread,71.32
 postcovid,-3,household_debt_gdp,72.28
 postcovid,-3,corporate_debt_gdp,97.54
@@ -556,6 +608,8 @@ postcovid,-3,rsp_spy_breadth,59.82
 postcovid,-3,dollar_spliced,60.02
 postcovid,-3,margin_debt_yoy,93.36
 postcovid,-1,buffett,100.0
+postcovid,-1,cape,98.52
+postcovid,-1,erp,32.6
 postcovid,-1,baa_spread,73.97
 postcovid,-1,household_debt_gdp,72.28
 postcovid,-1,corporate_debt_gdp,97.54
@@ -574,6 +628,8 @@ postcovid,-1,rsp_spy_breadth,92.84
 postcovid,-1,dollar_spliced,67.13
 postcovid,-1,margin_debt_yoy,57.99
 postcovid,0,buffett,98.6
+postcovid,0,cape,97.87
+postcovid,0,erp,25.0
 postcovid,0,baa_spread,73.35
 postcovid,0,household_debt_gdp,72.73
 postcovid,0,corporate_debt_gdp,97.2
@@ -592,6 +648,8 @@ postcovid,0,rsp_spy_breadth,90.03
 postcovid,0,dollar_spliced,63.89
 postcovid,0,margin_debt_yoy,34.26
 postcovid,6,buffett,95.49
+postcovid,6,cape,93.11
+postcovid,6,erp,64.1
 postcovid,6,baa_spread,37.43
 postcovid,6,household_debt_gdp,70.83
 postcovid,6,corporate_debt_gdp,96.53
@@ -610,6 +668,8 @@ postcovid,6,rsp_spy_breadth,28.22
 postcovid,6,dollar_spliced,78.38
 postcovid,6,margin_debt_yoy,10.17
 postcovid,12,buffett,97.24
+postcovid,12,cape,92.43
+postcovid,12,erp,84.17
 postcovid,12,baa_spread,61.08
 postcovid,12,household_debt_gdp,70.34
 postcovid,12,corporate_debt_gdp,93.45

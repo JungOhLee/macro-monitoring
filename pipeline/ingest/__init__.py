@@ -6,6 +6,7 @@ import pandas as pd
 
 from pipeline import store
 from pipeline.ingest.fred import fetch_fred
+from pipeline.ingest.shiller import fetch_shiller
 from pipeline.ingest.yahoo import fetch_yahoo
 from pipeline.registry import Registry
 
@@ -24,7 +25,12 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
             }
             continue
         try:
-            fetched = fetch_fred(s.source_id, api_key) if s.source == "fred" else fetch_yahoo(s.source_id)
+            if s.source == "fred":
+                fetched = fetch_fred(s.source_id, api_key)
+            elif s.source == "yahoo":
+                fetched = fetch_yahoo(s.source_id)
+            else:
+                fetched = fetch_shiller(s.source_id)
             existing = store.read_series(s.id)
             merged, changed = store.merge_observations(existing, fetched, s.revision_window_days)
             if changed:
