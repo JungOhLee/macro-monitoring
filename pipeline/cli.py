@@ -57,10 +57,22 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 1 if stale else 0
 
 
+def cmd_export(args: argparse.Namespace) -> int:
+    from pipeline.export import export_site
+    from pipeline.registry import load_thresholds
+
+    reg = load_registry()
+    latest = export_site(reg, load_thresholds())
+    print(f"export: site/data written, as_of {latest['as_of']}, "
+          f"composite {latest['composite']['full']['score']} ({latest['composite']['full']['regime']})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="pipeline")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("run").set_defaults(fn=cmd_run)
     sub.add_parser("status").set_defaults(fn=cmd_status)
+    sub.add_parser("export").set_defaults(fn=cmd_export)
     args = p.parse_args(argv)
     return args.fn(args)
