@@ -1003,6 +1003,8 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [ ] **Step 1: Write the failing tests** — `tests/test_ingest.py`
 
 ```python
+import json
+
 import pandas as pd
 
 import pipeline.ingest as ingest
@@ -1059,6 +1061,21 @@ def test_stale_series(tmp_path, monkeypatch):
         "mkt": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-06-01", "error": None},
     }
     assert ingest.stale_series(reg, fresh, now) == ["bad", "mkt"]
+
+
+def test_error_strings_scrub_api_key(tmp_path, monkeypatch):
+    """freshness.json is committed to a public repo; error text must never contain the key."""
+    monkeypatch.setattr(store.paths, "DATA_RAW", tmp_path / "raw")
+    monkeypatch.setattr(store.paths, "DATA_STATE", tmp_path / "state")
+
+    def leaky_fred(source_id, api_key):
+        raise RuntimeError(f"connection to /obs?api_key={api_key} refused")
+
+    monkeypatch.setattr(ingest, "fetch_fred", leaky_fred)
+    monkeypatch.setattr(ingest, "fetch_stooq", lambda sid: pd.Series([1.0], index=pd.to_datetime(["2026-07-03"])))
+    fresh = ingest.run_ingest(make_reg(), api_key="SECRETKEY123", now=pd.Timestamp("2026-07-05"))
+    assert "SECRETKEY123" not in json.dumps(fresh)
+    assert "***" in fresh["bad"]["error"]
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -1099,12 +1116,16 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
                 "error": None,
             }
         except Exception as exc:  # per-series isolation: one failure never aborts the run
+            err = f"{type(exc).__name__}: {exc}"
+            if api_key:
+                # freshness.json is committed to a public repo — never persist the key
+                err = err.replace(api_key, "***")
             prev = fresh.get(s.id, {})
             fresh[s.id] = {
                 "last_fetch": stamp,
                 "fetch_ok": False,
                 "last_obs": prev.get("last_obs"),
-                "error": f"{type(exc).__name__}: {exc}",
+                "error": err,
             }
     store.save_freshness(fresh)
     return fresh
