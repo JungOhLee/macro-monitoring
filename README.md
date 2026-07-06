@@ -17,7 +17,10 @@ updated daily by GitHub Actions, with crisis-comparison context.
   yourself: put a free FRED key in `.env` (`FRED_API_KEY=...`) and run
   `python -m pipeline run && python -m pipeline export`. `rsp`/`spy`/`btcusd`
   use Alpha Vantage when `ALPHAVANTAGE_KEY` is set (in `.env` locally or as a
-  repo secret in CI), otherwise Yahoo - currently dormant pending a key.
+  repo secret in CI); dormant otherwise (no key supplied yet in any
+  environment), in which case they fall back to Yahoo's v8 chart API, which
+  works from residential IPs but 429s intermittently from GitHub Actions
+  runners - 14-day staleness budgets absorb the blocked stretches.
 - **Status:** Phase 1-2 complete (scoring, dashboard, alerts, narrative drafts).
   **Phase 3 complete:** role-aware composite + stress gauge, analog similarity
   with SVG radar, pre-crisis sequence tracker,
@@ -25,10 +28,21 @@ updated daily by GitHub Actions, with crisis-comparison context.
   with validation criteria and base rates, auto-generated indicator firing
   timelines on episode pages, margin-debt data (FINRA manual-source import),
   and Shiller CAPE + equity-risk-premium indicators (valuation pillar now
-  averages Buffett indicator, CAPE, and ERP). Honest caveat: backtest
-  validation currently passes 2 of 4 criteria (postcovid, 2019-quiet-control),
-  with documented reasons for the other two (dotcom, gfc) - see the design
-  doc §13 note. Phase 4 adds scraper-based indicators (AAII, put/call) and
-  threshold tuning against the backtest.
+  averages Buffett indicator, CAPE, and ERP). **Phase 4 complete:** scored
+  history extended back to 1975, sequencer calibration (intra-window credit
+  widening, breadth near-high window, staleness-bound price confirmation,
+  credit-led engagement path), regime bands refit to the composite's own
+  historical quantiles (cool<64, warm<76, frothy<83, bubble_risk>=83, vs. the
+  original spec-guessed 40/70/85), analog similarity now demeaned before
+  cosine so it actually discriminates (display/base-rate threshold 0.98,
+  itself the 90th percentile of the demeaned similarity distribution), and a
+  dormant Alpha Vantage path for the Yahoo-sourced indicators above. Honest
+  caveat: backtest validation now passes 4 of 5 criteria (gfc, 2019-quiet-
+  control, postcovid, rec1990), with dotcom's FAIL unchanged for a documented
+  structural/data-availability reason - see the design doc §13 note (which
+  also records a mid-task honesty-gate stop-and-fix on the 2019 control, and
+  a nuance on reading the 1980-81 Volcker period's leverage pillar alongside,
+  not instead of, the composite). Ongoing: scraper-based indicators (AAII,
+  put/call) remain manual/partial.
 
 *Monitoring context, not a trading signal.*
