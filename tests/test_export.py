@@ -72,6 +72,18 @@ def test_export_writes_episodes_json(site, monkeypatch, tmp_path):
     assert epi["timeline90"]["gfc"]["i_up"] == -6
 
 
+def test_export_analogs_in_latest(site, monkeypatch):
+    import pipeline.compute.episodes as epimod
+    rows = [{"episode": "gfc", "offset_months": -6, "indicator_id": f"k{i}", "percentile": 50.0}
+            for i in range(8)]
+    rows += [{"episode": "gfc", "offset_months": -6, "indicator_id": "i_up", "percentile": 100.0},
+             {"episode": "gfc", "offset_months": -6, "indicator_id": "i_down", "percentile": 99.0}]
+    monkeypatch.setattr(epimod, "load_snapshots", lambda: pd.DataFrame(rows))
+    payload = export.export_site(make_reg(), THX)
+    # today's vector only has i_up/i_down (+gated i_young absent) => shared=2 < 8 -> no analogs
+    assert payload["analogs"] is None
+
+
 def test_downsample_never_exceeds_max():
     for n in (999, 1000, 1001, 2000, 2500, 3000, 5000, 10000):
         s = pd.Series(range(n), index=pd.date_range("1990-01-01", periods=n))

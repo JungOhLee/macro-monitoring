@@ -20,14 +20,15 @@ const PLOT_BASE = { paper_bgcolor:"#1b2029", plot_bgcolor:"#1b2029",
   font:{color:"#e6e9ef", size:12}, margin:{l:45,r:15,t:10,b:35} };
 const CFG = { displayModeBar:false, responsive:true };
 
-let LATEST, HISTORY, INDICATORS, WIN = "full";
+let LATEST, HISTORY, INDICATORS, EPISODES, WIN = "full";
 
 async function boot() {
-  [LATEST, HISTORY, INDICATORS] = await Promise.all(
-    ["latest", "history", "indicators"].map(n => fetch(`data/${n}.json`).then(r => r.json())));
+  [LATEST, HISTORY, INDICATORS, EPISODES] = await Promise.all(
+    ["latest", "history", "indicators", "episodes"].map(n => fetch(`data/${n}.json`).then(r => r.json())));
   document.getElementById("asof").textContent = `as of ${LATEST.as_of}`;
   renderGauge(); renderPillars(); renderHistory(); initPicker();
   initHistoryTabs(); renderStress();
+  renderAnalogs(); renderRadar(); renderAnalogTable();
   document.getElementById("window-toggle").addEventListener("change", e => {
     WIN = e.target.checked ? "rolling20y" : "full";
     renderGauge(); renderPillars(); renderHistory(); renderStress();
@@ -174,6 +175,76 @@ function renderIndicator(id) {
                                 line: { color: "#d64545", width: 1, dash: "dot" } })),
         ...episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
       ] }, CFG);
+}
+
+let SEL_ANALOG = 0;
+
+function renderAnalogs() {
+  const a = LATEST.analogs;
+  const list = document.getElementById("analog-list");
+  if (!a || !a.top.length) { list.textContent = "No analog data yet."; return; }
+  list.innerHTML = a.top.map((t, i) =>
+    `<div class="analog-row ${i === SEL_ANALOG ? "sel" : ""}" data-i="${i}">` +
+    `${i + 1}. <a href="episodes/${t.episode}.html">${t.name}</a> at T${t.offset_months >= 0 ? "+" : ""}${t.offset_months}m ` +
+    `— similarity ${(t.similarity * 100).toFixed(0)}% <span class="muted">(${t.n_shared} shared)</span></div>`).join("");
+  list.querySelectorAll(".analog-row").forEach(row =>
+    row.addEventListener("click", e => {
+      if (e.target.tagName === "A") return;
+      SEL_ANALOG = +row.dataset.i;
+      renderAnalogs(); renderRadar(); renderAnalogTable();
+    }));
+}
+
+function radarPoints(scores, cx, cy, rmax) {
+  const axes = ["valuation", "leverage", "liquidity", "sentiment", "macro"];
+  return axes.map((p, i) => {
+    const v = (scores[p] ?? 0) / 100;
+    const ang = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
+    return [cx + rmax * v * Math.cos(ang), cy + rmax * v * Math.sin(ang)];
+  });
+}
+
+function renderRadar() {
+  const svg = document.getElementById("radar");
+  const a = LATEST.analogs;
+  svg.innerHTML = "";
+  if (!a || !a.top.length) return;
+  const t = a.top[SEL_ANALOG];
+  const ep = (EPISODES.pillar_scores[t.episode] || {})[String(t.offset_months)] || {};
+  const today = {};
+  for (const [p, d] of Object.entries(LATEST.pillars)) today[p] = d.full ?? 0;
+  const cx = 150, cy = 135, rmax = 100;
+  const axes = ["valuation", "leverage", "liquidity", "sentiment", "macro"];
+  let grid = "";
+  for (const frac of [0.25, 0.5, 0.75, 1]) {
+    const ring = radarPoints(Object.fromEntries(axes.map(p => [p, frac * 100])), cx, cy, rmax);
+    grid += `<polygon points="${ring.map(p => p.join(",")).join(" ")}" fill="none" stroke="#2a3140" stroke-width="1"/>`;
+  }
+  const labels = axes.map((p, i) => {
+    const ang = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
+    const x = cx + (rmax + 16) * Math.cos(ang), y = cy + (rmax + 16) * Math.sin(ang);
+    return `<text x="${x}" y="${y}" fill="#8b93a3" font-size="10" text-anchor="middle">${PILLAR_LABEL[p].split(" ")[0]}</text>`;
+  }).join("");
+  const poly = (scores, color, fillOp) => {
+    const pts = radarPoints(scores, cx, cy, rmax).map(p => p.join(",")).join(" ");
+    return `<polygon points="${pts}" fill="${color}" fill-opacity="${fillOp}" stroke="${color}" stroke-width="1.6"/>`;
+  };
+  svg.innerHTML = grid + labels + poly(ep, "#d64545", 0.18) + poly(today, "#6ea8fe", 0.25) +
+    `<text x="8" y="14" fill="#6ea8fe" font-size="10">today</text>` +
+    `<text x="8" y="28" fill="#d64545" font-size="10">${t.episode} T${t.offset_months}m</text>`;
+}
+
+function renderAnalogTable() {
+  const el = document.getElementById("analog-table");
+  const a = LATEST.analogs;
+  if (!a || !a.top.length) { el.innerHTML = ""; return; }
+  const t = a.top[SEL_ANALOG];
+  const snap = (EPISODES.snapshots[t.episode] || {})[String(t.offset_months)] || {};
+  const rows = Object.keys(snap).filter(id => INDICATORS[id])
+    .sort((x, y) => (snap[y] - (INDICATORS[y].latest.pct_full ?? 0)) - (snap[x] - (INDICATORS[x].latest.pct_full ?? 0)))
+    .map(id => `<tr><td>${INDICATORS[id].name}</td>` +
+      `<td>${INDICATORS[id].latest.pct_full ?? "–"}</td><td>${snap[id]}</td></tr>`).join("");
+  el.innerHTML = `<table><tr><th>Indicator</th><th>today pct</th><th>${t.episode} T${t.offset_months}m</th></tr>${rows}</table>`;
 }
 
 boot().catch(e => { document.body.insertAdjacentHTML("afterbegin",

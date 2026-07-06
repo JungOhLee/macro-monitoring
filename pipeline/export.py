@@ -39,6 +39,7 @@ def _atomic_write(fp, obj) -> None:
 
 
 def export_site(reg: Registry, thresholds: dict) -> dict:
+    from pipeline.compute.analogs import top_analogs
     from pipeline.compute.episodes import firing_timeline, load_snapshots, pillar_scores_from_snapshots
     from pipeline.registry import load_episodes
 
@@ -48,6 +49,20 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
 
     epi_cfg = load_episodes()
     snaps = load_snapshots()
+
+    today_vec = {
+        ind_id: float(r.froth_full.iloc[-1])
+        for ind_id, r in result.indicators.items() if not r.froth_full.empty
+    }
+    analog_top = top_analogs(today_vec, snaps) if not snaps.empty else []
+    ep_names = {e["id"]: e["name"] for e in epi_cfg["episodes"]}
+    analogs_payload = None
+    if analog_top:
+        analogs_payload = {
+            "top": [{**t, "name": ep_names.get(t["episode"], t["episode"])} for t in analog_top],
+            "today_vector_size": len(today_vec),
+        }
+
     fresh = store.load_freshness()
     # Offline fallback: only backfill when freshness.json is entirely empty
     # (true offline case). When freshness.json exists and is non-empty, use it as-is.
@@ -104,7 +119,7 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
         "composite": comp,
         "stress": stress,
         "pillars": pillars,
-        "analogs": None,
+        "analogs": analogs_payload,
         "sequence": None,
         "freshness": {
             s.id: {"last_obs": (raw[s.id].index.max().strftime("%Y-%m-%d") if not raw[s.id].empty else None),

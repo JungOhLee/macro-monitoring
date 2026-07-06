@@ -22,8 +22,11 @@
 <section id="status" class="card-row">
   <div class="card" id="gauge-card"><div id="gauge"></div><div id="regime-label"></div>
   <div id="stress-label" class="muted"></div></div>
-  <div class="card placeholder" id="analog-card">
-    <h3>Closest crisis analog</h3><p class="muted">Available in Phase 3 (episode library)</p>
+  <div class="card" id="analog-card">
+    <h3>Closest crisis analog</h3>
+    <div id="analog-list" class="muted">No analog data yet.</div>
+    <svg id="radar" viewBox="0 0 300 260" style="width:100%;max-width:340px;display:block;margin:8px auto"></svg>
+    <div id="analog-table"></div>
   </div>
   <div class="card placeholder" id="sequence-card">
     <h3>Pre-crisis sequence</h3><p class="muted">Available in Phase 3 (sequencing engine)</p>
