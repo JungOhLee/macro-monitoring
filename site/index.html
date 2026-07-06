@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macro Bubble Monitor</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header>
+  <h1>Macro Bubble Monitor</h1>
+  <div id="asof" class="muted"></div>
+</header>
+
+<section id="status" class="card-row">
+  <div class="card" id="gauge-card"><div id="gauge"></div><div id="regime-label"></div></div>
+  <div class="card placeholder" id="analog-card">
+    <h3>Closest crisis analog</h3><p class="muted">Available in Phase 3 (episode library)</p>
+  </div>
+  <div class="card placeholder" id="sequence-card">
+    <h3>Pre-crisis sequence</h3><p class="muted">Available in Phase 3 (sequencing engine)</p>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Pillars</h2><span class="muted">score 0–100 · Δ1m / Δ3m</span></div>
+  <div id="pillars"></div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Score history</h2>
+    <label class="toggle"><input type="checkbox" id="window-toggle"> rolling 20y window</label>
+  </div>
+  <div id="history"></div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Indicator drill-down</h2>
+    <select id="indicator-picker"></select>
+  </div>
+  <div id="indicator-meta"></div>
+  <div id="indicator-raw"></div>
+  <div id="indicator-pct"></div>
+</section>
+
+<footer class="muted">Monitoring context, not a trading signal. Data: FRED, Stooq, public sources.
+  <a href="https://github.com/JungOhLee/macro-monitoring">source</a></footer>
+
+<script src="assets/plotly-finance.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
