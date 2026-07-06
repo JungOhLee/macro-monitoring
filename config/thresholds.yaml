@@ -1,0 +1,11 @@
+regime_bands:   # ascending upper bounds; last band has bound 100
+  - {name: cool,        upper: 40}
+  - {name: warm,        upper: 70}
+  - {name: frothy,      upper: 85}
+  - {name: bubble_risk, upper: 100}
+
+score_start: "1990-01-01"   # first date scores are computed for
+
+alerts:
+  pillar_extreme_level: 90
+  cooldown_days: 7
