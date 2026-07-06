@@ -220,6 +220,34 @@ EPISODE_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def _timeline_html(ep_id: str) -> str:
+    from pipeline.compute.episodes import firing_timeline, load_snapshots
+    from pipeline.registry import load_registry
+
+    snaps = load_snapshots()
+    if snaps.empty or ep_id not in set(snaps.episode):
+        return ""
+    try:
+        names = {i.id: i.name for i in load_registry().indicators}
+    except Exception:
+        names = {}
+    rows_html = []
+    for level in (80, 90):
+        tl = firing_timeline(snaps, level)
+        tl = tl[tl.episode == ep_id].sort_values("first_offset")
+        for r in tl.itertuples(index=False):
+            rows_html.append(
+                f"<tr><td>{names.get(r.indicator_id, r.indicator_id)}</td>"
+                f"<td>&ge;{level}th pct</td><td>T{'+' if r.first_offset >= 0 else '−'}{abs(int(r.first_offset))}m</td></tr>")
+    if not rows_html:
+        return ""
+    return ("<h2>Indicator timeline (auto-generated)</h2>"
+            "<p class='muted'>First snapshot offset at which each indicator crossed the given "
+            "froth percentile, from the episode library. Sparse for early episodes where "
+            "fewer indicators have 10y of history.</p>"
+            "<table>" + "".join(rows_html) + "</table>")
+
+
 def render_episodes() -> list[str]:
     import markdown
 
@@ -228,7 +256,7 @@ def render_episodes() -> list[str]:
     for md_file in sorted(paths.EPISODES.glob("*.md")):
         text = md_file.read_text()
         title = text.splitlines()[0].lstrip("# ").strip()
-        body = markdown.markdown(text)
+        body = markdown.markdown(text) + _timeline_html(md_file.stem)
         outdir.mkdir(parents=True, exist_ok=True)
         (outdir / f"{md_file.stem}.html").write_text(
             EPISODE_TEMPLATE.format(title=title, body=body))
