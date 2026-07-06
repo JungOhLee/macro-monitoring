@@ -6,6 +6,16 @@ const REGIME = {
 };
 const PILLAR_LABEL = { valuation:"Valuation", leverage:"Leverage & credit",
   liquidity:"Liquidity & monetary", sentiment:"Sentiment & speculation", macro:"Macro stress & breadth" };
+const HISTORY_TABS = [
+  { key: "composite", label: "Composite" },
+  { key: "valuation", label: "Valuation" },
+  { key: "leverage", label: "Leverage" },
+  { key: "liquidity", label: "Liquidity" },
+  { key: "sentiment", label: "Sentiment" },
+  { key: "macro", label: "Macro breadth" },
+  { key: "stress", label: "Confirmation stress" },
+];
+let HTAB = "composite";
 const PLOT_BASE = { paper_bgcolor:"#1b2029", plot_bgcolor:"#1b2029",
   font:{color:"#e6e9ef", size:12}, margin:{l:45,r:15,t:10,b:35} };
 const CFG = { displayModeBar:false, responsive:true };
@@ -17,10 +27,35 @@ async function boot() {
     ["latest", "history", "indicators"].map(n => fetch(`data/${n}.json`).then(r => r.json())));
   document.getElementById("asof").textContent = `as of ${LATEST.as_of}`;
   renderGauge(); renderPillars(); renderHistory(); initPicker();
+  initHistoryTabs(); renderStress();
   document.getElementById("window-toggle").addEventListener("change", e => {
     WIN = e.target.checked ? "rolling20y" : "full";
-    renderGauge(); renderPillars(); renderHistory();
+    renderGauge(); renderPillars(); renderHistory(); renderStress();
   });
+}
+
+function initHistoryTabs() {
+  const el = document.getElementById("history-tabs");
+  for (const t of HISTORY_TABS) {
+    const b = document.createElement("button");
+    b.textContent = t.label;
+    b.dataset.key = t.key;
+    if (t.key === HTAB) b.classList.add("active");
+    b.addEventListener("click", () => {
+      HTAB = t.key;
+      el.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.key === HTAB));
+      renderHistory();
+    });
+    el.appendChild(b);
+  }
+}
+
+function renderStress() {
+  const s = (LATEST.stress || {})[WIN] || (LATEST.stress || {}).full;
+  const el = document.getElementById("stress-label");
+  if (!s) { el.textContent = ""; return; }
+  const color = s.label === "confirming" ? "#d64545" : s.label === "elevated" ? "#e0b83c" : "#4caf7d";
+  el.innerHTML = `Confirmation stress: <span style="color:${color}">${s.score} (${s.label})</span>`;
 }
 
 function comp() { return LATEST.composite[WIN] || LATEST.composite.full; }
@@ -64,16 +99,37 @@ function renderPillars() {
   }
 }
 
+function episodeShapes() {
+  return HISTORY.episode_peaks.map(d => ({
+    type: "line", x0: d, x1: d, y0: 0, y1: 1, yref: "paper",
+    line: { color: "#d64545", width: 1, dash: "dot" } }));
+}
+
 function renderHistory() {
   const h = HISTORY[WIN];
   if (!h) return;
-  const traces = [{ x: h.dates, y: h.composite, name: "Composite",
-                    line: { color: "#e6e9ef", width: 2.4 } }];
-  for (const [p, vals] of Object.entries(h.pillars))
-    traces.push({ x: h.dates, y: vals, name: PILLAR_LABEL[p],
-                  line: { width: 1 }, opacity: 0.55, visible: "legendonly" });
-  const shapes = HISTORY.episode_peaks.map(d => ({
-    type: "line", x0: d, x1: d, y0: 0, y1: 100, line: { color: "#d64545", width: 1, dash: "dot" } }));
+  const traces = [];
+  if (HTAB === "composite") {
+    traces.push({ x: h.dates, y: h.composite, name: "Composite",
+                  line: { color: "#e6e9ef", width: 2.4 } });
+    for (const [p, vals] of Object.entries(h.pillars))
+      traces.push({ x: h.dates, y: vals, name: PILLAR_LABEL[p],
+                    line: { width: 1 }, opacity: 0.55, visible: "legendonly" });
+    if (h.stress) traces.push({ x: h.dates, y: h.stress, name: "Confirmation stress",
+                                line: { width: 1, dash: "dot" }, opacity: 0.5, visible: "legendonly" });
+  } else if (HTAB === "stress") {
+    if (h.stress) traces.push({ x: h.dates, y: h.stress, name: "Confirmation stress",
+                                line: { color: "#e07b3c", width: 2.2 } });
+    traces.push({ x: h.dates, y: h.composite, name: "Composite (ref)",
+                  line: { color: "#8b93a3", width: 1, dash: "dash" }, opacity: 0.6 });
+  } else {
+    const vals = h.pillars[HTAB];
+    if (vals) traces.push({ x: h.dates, y: vals, name: PILLAR_LABEL[HTAB],
+                            line: { color: "#6ea8fe", width: 2.2 } });
+    traces.push({ x: h.dates, y: h.composite, name: "Composite (ref)",
+                  line: { color: "#8b93a3", width: 1, dash: "dash" }, opacity: 0.6 });
+  }
+  const shapes = episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
   const bands = [[0,40,"rgba(76,175,125,.05)"],[40,70,"rgba(224,184,60,.05)"],
                  [70,85,"rgba(224,123,60,.06)"],[85,100,"rgba(214,69,69,.08)"]];
   for (const [y0,y1,c] of bands)
@@ -108,12 +164,16 @@ function renderIndicator(id) {
     ` <span class="muted">last obs ${d.last_obs}</span>`;
   Plotly.newPlot("indicator-raw",
     [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }],
-    { ...PLOT_BASE, height: 230, yaxis: { title: { text: "raw value", font: { size: 11 } } } }, CFG);
+    { ...PLOT_BASE, height: 230, shapes: episodeShapes(),
+      yaxis: { title: { text: "raw value", font: { size: 11 } } } }, CFG);
   Plotly.newPlot("indicator-pct",
     [{ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct", line: { color: "#e0b83c", width: 1.4 } }],
     { ...PLOT_BASE, height: 200, yaxis: { range: [0, 100] },
-      shapes: [80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
-                                   line: { color: "#d64545", width: 1, dash: "dot" } })) }, CFG);
+      shapes: [
+        ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
+                                line: { color: "#d64545", width: 1, dash: "dot" } })),
+        ...episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
+      ] }, CFG);
 }
 
 boot().catch(e => { document.body.insertAdjacentHTML("afterbegin",

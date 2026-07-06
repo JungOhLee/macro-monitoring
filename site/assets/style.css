@@ -29,3 +29,7 @@ select { background:var(--card); color:var(--text); border:1px solid var(--line)
 footer { margin-top:24px; font-size:.8rem; }
 a { color:#6ea8fe; }
 @media (max-width:640px){ .pillar-row { grid-template-columns:110px 1fr 70px; } }
+.tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.tabs button { background:var(--bg); color:var(--muted); border:1px solid var(--line);
+               border-radius:15px; padding:3px 12px; font-size:.8rem; cursor:pointer; }
+.tabs button.active { color:var(--text); border-color:var(--warm); }
