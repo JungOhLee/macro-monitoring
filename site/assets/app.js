@@ -102,10 +102,31 @@ function renderPillars() {
   }
 }
 
-function episodeShapes() {
-  return HISTORY.episode_peaks.map(d => ({
-    type: "line", x0: d, x1: d, y0: 0, y1: 1, yref: "paper",
-    line: { color: "#d64545", width: 1, dash: "dot" } }));
+function crisisShapes() {
+  const markers = HISTORY.crisis_markers ||
+    (HISTORY.episode_peaks || []).map(d => ({ date: d, library: true }));
+  return markers.map(m => ({
+    type: "line", x0: m.date, x1: m.date, y0: 0, y1: 1, yref: "paper",
+    line: { color: m.library ? "#d64545" : "#8b93a3", width: 1, dash: "dot" } }));
+}
+
+function crisisLabels(yPos) {
+  const markers = HISTORY.crisis_markers ||
+    (HISTORY.episode_peaks || []).map(d => ({ date: d }));
+  return {
+    x: markers.map(m => m.date), y: markers.map(() => yPos),
+    mode: "markers", hoverinfo: "text", showlegend: false,
+    text: markers.map(m => m.name ? `${m.name} (${m.date})` : m.date),
+    marker: { size: 6, opacity: 0 },
+  };
+}
+
+// Plotly's autorange includes shape/marker x-values even when far outside the
+// actual data series (e.g. an 1929 crisis marker on a chart whose real data
+// starts in 1990). Pin the x-axis to the plotted series' own span so
+// out-of-range markers are clipped silently instead of stretching the axis.
+function dateRange(dates) {
+  return dates && dates.length ? { range: [dates[0], dates[dates.length - 1]] } : {};
 }
 
 function renderHistory() {
@@ -132,13 +153,15 @@ function renderHistory() {
     traces.push({ x: h.dates, y: h.composite, name: "Composite (ref)",
                   line: { color: "#8b93a3", width: 1, dash: "dash" }, opacity: 0.6 });
   }
-  const shapes = episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
+  traces.push(crisisLabels(97));
+  const shapes = crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
   const bands = [[0,40,"rgba(76,175,125,.05)"],[40,70,"rgba(224,184,60,.05)"],
                  [70,85,"rgba(224,123,60,.06)"],[85,100,"rgba(214,69,69,.08)"]];
   for (const [y0,y1,c] of bands)
     shapes.push({ type:"rect", xref:"paper", x0:0, x1:1, y0, y1, fillcolor:c, line:{width:0} });
   Plotly.newPlot("history", traces,
     { ...PLOT_BASE, height: 340, shapes, yaxis: { range: [0, 100] },
+      xaxis: dateRange(h.dates),
       legend: { orientation: "h", y: -0.15 } }, CFG);
 }
 
@@ -167,15 +190,18 @@ function renderIndicator(id) {
     ` <span class="muted">last obs ${d.last_obs}</span>`;
   Plotly.newPlot("indicator-raw",
     [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }],
-    { ...PLOT_BASE, height: 230, shapes: episodeShapes(),
+    { ...PLOT_BASE, height: 230, shapes: crisisShapes(),
+      xaxis: dateRange(d.series.dates),
       yaxis: { title: { text: "raw value", font: { size: 11 } } } }, CFG);
   Plotly.newPlot("indicator-pct",
-    [{ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct", line: { color: "#e0b83c", width: 1.4 } }],
+    [{ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct", line: { color: "#e0b83c", width: 1.4 } },
+     crisisLabels(97)],
     { ...PLOT_BASE, height: 200, yaxis: { range: [0, 100] },
+      xaxis: dateRange(d.pct_series.dates),
       shapes: [
         ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
                                 line: { color: "#d64545", width: 1, dash: "dot" } })),
-        ...episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
+        ...crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
       ] }, CFG);
 }
 

@@ -14,7 +14,7 @@
 <script src="assets/plotly-finance.min.js"></script>
 <script>
 fetch("data/backtest.json").then(r => r.json()).then(bt => {
-  const shapes = bt.episodes.filter(e => !e.control).map(e => {
+  const shapes = bt.episodes.filter(e => e.criterion !== false || e.control).map(e => {
     const peak = new Date(e.peak); const start = new Date(peak); start.setMonth(start.getMonth() - 24);
     return { type: "rect", x0: start.toISOString().slice(0,10), x1: e.peak, y0: 0, y1: 1,
              yref: "paper", fillcolor: "rgba(214,69,69,.08)", line: { width: 0 } };
