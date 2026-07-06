@@ -79,3 +79,18 @@ def test_build_indicator_series_raw_and_derived():
     assert derived.build_indicator_series(raw_ind, raw).equals(raw["vixcls"])
     out = derived.build_indicator_series(der_ind, raw)
     assert out["2026-01-31"] == pytest.approx(5.0)
+
+
+def test_asof_align_skips_internal_nan():
+    target = pd.date_range("2026-01-01", periods=4)
+    s = pd.Series([1.0, float("nan"), 3.0],
+                  index=pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-04"]))
+    out = derived.asof_align(target, s)
+    assert out["2026-01-02"] == 1.0   # NaN cell skipped, last known value used
+    assert out["2026-01-03"] == 1.0
+    assert out["2026-01-04"] == 3.0
+
+
+def test_yoy_empty_input():
+    out = derived.FORMULAS["yoy"](pd.Series(dtype=float, index=pd.DatetimeIndex([])))
+    assert out.empty

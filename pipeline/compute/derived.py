@@ -8,7 +8,7 @@ from pipeline.registry import Indicator
 
 def asof_align(target_index: pd.DatetimeIndex, s: pd.Series) -> pd.Series:
     """Last known value of s at each target date (NaN before s starts)."""
-    return s.sort_index().reindex(target_index, method="ffill")
+    return s.dropna().sort_index().reindex(target_index, method="ffill")
 
 
 def _ratio(a: pd.Series, b: pd.Series) -> pd.Series:
@@ -17,6 +17,8 @@ def _ratio(a: pd.Series, b: pd.Series) -> pd.Series:
 
 def _yoy(s: pd.Series) -> pd.Series:
     s = s.sort_index()
+    if s.empty:
+        return pd.Series(dtype=float, index=pd.DatetimeIndex([]))
     prior_dates = s.index - pd.DateOffset(years=1)
     prior = s.reindex(s.index.union(prior_dates)).sort_index().ffill().reindex(prior_dates)
     out = (s.to_numpy() / prior.to_numpy() - 1.0) * 100.0
