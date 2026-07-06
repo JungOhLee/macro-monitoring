@@ -32,7 +32,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_status(args: argparse.Namespace) -> int:
     reg = load_registry()
     fresh = store.load_freshness()
-    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
     stale = set(stale_series(reg, fresh, now))
     for s in reg.series:
         rec = fresh.get(s.id, {})

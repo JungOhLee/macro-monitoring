@@ -11,26 +11,27 @@ pillar_weights:
 
 series:
   # ---- FRED ----
-  # Quarterly/monthly budgets account for FRED period-START observation dating + publication lag.
-  - {id: ncbeilq027s, source: fred, source_id: NCBEILQ027S, frequency: quarterly, staleness_budget_days: 220, revision_window_days: 370, lag_days: 75}
-  - {id: gdp,         source: fred, source_id: GDP,         frequency: quarterly, staleness_budget_days: 220, revision_window_days: 370, lag_days: 30}
-  - {id: cmdebt,      source: fred, source_id: CMDEBT,      frequency: quarterly, staleness_budget_days: 220, revision_window_days: 370, lag_days: 75}
-  - {id: bcnsdodns,   source: fred, source_id: BCNSDODNS,   frequency: quarterly, staleness_budget_days: 220, revision_window_days: 370, lag_days: 75}
-  - {id: drtscilm,    source: fred, source_id: DRTSCILM,    frequency: quarterly, staleness_budget_days: 220, revision_window_days: 100, lag_days: 20}
-  - {id: m2sl,        source: fred, source_id: M2SL,        frequency: monthly,   staleness_budget_days: 90,  revision_window_days: 60,  lag_days: 14}
+  # Budgets = 2x period + publication lag + grace: FRED dates observations at period START,
+  # so a fully-current quarterly series can legitimately be ~250 days old just before the next release.
+  - {id: ncbeilq027s, source: fred, source_id: NCBEILQ027S, frequency: quarterly, staleness_budget_days: 270, revision_window_days: 370, lag_days: 75}
+  - {id: gdp,         source: fred, source_id: GDP,         frequency: quarterly, staleness_budget_days: 270, revision_window_days: 370, lag_days: 30}
+  - {id: cmdebt,      source: fred, source_id: CMDEBT,      frequency: quarterly, staleness_budget_days: 270, revision_window_days: 370, lag_days: 75}
+  - {id: bcnsdodns,   source: fred, source_id: BCNSDODNS,   frequency: quarterly, staleness_budget_days: 270, revision_window_days: 370, lag_days: 75}
+  - {id: drtscilm,    source: fred, source_id: DRTSCILM,    frequency: quarterly, staleness_budget_days: 270, revision_window_days: 100, lag_days: 20}
+  - {id: m2sl,        source: fred, source_id: M2SL,        frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}
   - {id: walcl,       source: fred, source_id: WALCL,       frequency: weekly,    staleness_budget_days: 12,  revision_window_days: 14,  lag_days: 1}
   - {id: wtregen,     source: fred, source_id: WTREGEN,     frequency: daily,     staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
   - {id: rrpontsyd,   source: fred, source_id: RRPONTSYD,   frequency: daily,     staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
-  - {id: fedfunds,    source: fred, source_id: FEDFUNDS,    frequency: monthly,   staleness_budget_days: 90,  revision_window_days: 30,  lag_days: 3}
-  - {id: cpilfesl,    source: fred, source_id: CPILFESL,    frequency: monthly,   staleness_budget_days: 90,  revision_window_days: 60,  lag_days: 14}
+  - {id: fedfunds,    source: fred, source_id: FEDFUNDS,    frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 30,  lag_days: 3}
+  - {id: cpilfesl,    source: fred, source_id: CPILFESL,    frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}
   - {id: bamlh0a0hym2, source: fred, source_id: BAMLH0A0HYM2, frequency: daily,   staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
   - {id: t10y2y,      source: fred, source_id: T10Y2Y,      frequency: daily,     staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
   - {id: t10y3m,      source: fred, source_id: T10Y3M,      frequency: daily,     staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
   - {id: vixcls,      source: fred, source_id: VIXCLS,      frequency: daily,     staleness_budget_days: 7,   revision_window_days: 7,   lag_days: 1}
   - {id: dtwexbgs,    source: fred, source_id: DTWEXBGS,    frequency: daily,     staleness_budget_days: 10,  revision_window_days: 7,   lag_days: 1}
   - {id: dtwexm,      source: fred, source_id: DTWEXM,      frequency: weekly,    staleness_budget_days: 36500, revision_window_days: 0, lag_days: 1}  # discontinued 2019; splice donor only
-  - {id: sahmrealtime, source: fred, source_id: SAHMREALTIME, frequency: monthly, staleness_budget_days: 90,  revision_window_days: 90,  lag_days: 35}
-  - {id: cfnai,       source: fred, source_id: CFNAI,       frequency: monthly,   staleness_budget_days: 90,  revision_window_days: 400, lag_days: 25}
+  - {id: sahmrealtime, source: fred, source_id: SAHMREALTIME, frequency: monthly, staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
+  - {id: cfnai,       source: fred, source_id: CFNAI,       frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 400, lag_days: 25}
   # ---- FRED (S&P daily level; deep history seeded one-time from Yahoo ^GSPC) ----
   - {id: spx,    source: fred,  source_id: SP500,   frequency: daily, staleness_budget_days: 7,  revision_window_days: 7, lag_days: 1}
   # ---- Yahoo chart API (best-effort from CI; 14d budgets absorb datacenter blocks) ----

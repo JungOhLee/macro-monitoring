@@ -55,3 +55,49 @@ def test_malformed_payload_raises(monkeypatch):
     with pytest.raises(RuntimeError) as excinfo:
         yahoo.fetch_yahoo("^GSPC")
     assert "unexpected payload" in str(excinfo.value)
+
+
+def test_duplicate_timestamps_keep_last(monkeypatch):
+    """Two timestamps normalizing to the same date with different closes should keep the LAST."""
+    # 1767646800 and 1767650400 both normalize to 2026-01-05
+    payload = {
+        "chart": {
+            "result": [
+                {
+                    "timestamp": [1767646800, 1767650400],
+                    "indicators": {"quote": [{"close": [10.5, 11.0]}]},
+                }
+            ]
+        }
+    }
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        return FakeResp(payload)
+
+    monkeypatch.setattr(yahoo.requests, "get", fake_get)
+    s = yahoo.fetch_yahoo("TEST")
+    assert len(s) == 1
+    assert s.iloc[0] == 11.0  # Keep the last close
+    assert s.index[0] == pd.Timestamp("2026-01-05")
+
+
+def test_all_none_closes_raises(monkeypatch):
+    """Payload with all None closes should raise RuntimeError."""
+    payload = {
+        "chart": {
+            "result": [
+                {
+                    "timestamp": TIMESTAMPS,
+                    "indicators": {"quote": [{"close": [None, None, None]}]},
+                }
+            ]
+        }
+    }
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        return FakeResp(payload)
+
+    monkeypatch.setattr(yahoo.requests, "get", fake_get)
+    with pytest.raises(RuntimeError) as excinfo:
+        yahoo.fetch_yahoo("TEST")
+    assert "no data" in str(excinfo.value)

@@ -33,8 +33,11 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
                 # freshness.json is committed to a public repo — never persist the key
                 err = err.replace(api_key, "***")
             prev = fresh.get(s.id, {})
-            stored = store.read_series(s.id)
-            fallback = stored.index.max().strftime("%Y-%m-%d") if not stored.empty else None
+            try:
+                stored = store.read_series(s.id)
+                fallback = stored.index.max().strftime("%Y-%m-%d") if not stored.empty else None
+            except Exception:
+                fallback = None
             fresh[s.id] = {
                 "last_fetch": stamp,
                 "fetch_ok": False,

@@ -71,3 +71,28 @@ def test_error_strings_scrub_api_key(tmp_path, monkeypatch):
     fresh = ingest.run_ingest(make_reg(), api_key="SECRETKEY123", now=pd.Timestamp("2026-07-05"))
     assert "SECRETKEY123" not in json.dumps(fresh)
     assert "***" in fresh["bad"]["error"]
+
+
+def test_isolation_survives_corrupt_stored_csv(tmp_path, monkeypatch):
+    """Fallback stored-series read must be guarded; corrupt CSV in exception handler can't crash the loop."""
+    monkeypatch.setattr(store.paths, "DATA_RAW", tmp_path / "raw")
+    monkeypatch.setattr(store.paths, "DATA_STATE", tmp_path / "state")
+    # Set up a garbage CSV for "bad" series
+    (tmp_path / "raw").mkdir(parents=True)
+    (tmp_path / "raw" / "bad.csv").write_text("not,a,csv\n1,2,3\n")
+
+    def fred_with_bad_raises(source_id, api_key):
+        if source_id == "BAD":
+            raise RuntimeError("boom")
+        return pd.Series([1.0], index=pd.to_datetime(["2026-07-03"]), name=source_id)
+
+    monkeypatch.setattr(ingest, "fetch_fred", fred_with_bad_raises)
+    monkeypatch.setattr(ingest, "fetch_yahoo", fake_yahoo)
+    now = pd.Timestamp("2026-07-05")
+    fresh = ingest.run_ingest(make_reg(), api_key="K", now=now)
+    # Bad series should report failure but not crash
+    assert fresh["bad"]["fetch_ok"] is False
+    assert fresh["bad"]["last_obs"] is None
+    # Good series should complete successfully
+    assert fresh["good"]["fetch_ok"] is True
+    assert fresh["good"]["last_obs"] == "2026-07-03"
