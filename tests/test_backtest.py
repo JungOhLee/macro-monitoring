@@ -33,6 +33,26 @@ def test_criteria_evaluation():
     assert {c["name"]: c["pass"] for c in crits2}["quiet through 2019 (covid control)"] is False
 
 
+def test_monthly_top1_similarities_basic():
+    keys = [f"k{i}" for i in range(8)]
+    months = pd.to_datetime(["2020-01-31", "2020-02-29"])
+    froth = {k: pd.Series([80.0, 20.0], index=months) for k in keys}
+    rows = [{"episode": "gfc", "offset_months": -6, "indicator_id": k, "percentile": 80.0} for k in keys]
+    snaps = pd.DataFrame(rows)
+    sims = backtest.monthly_top1_similarities(months, snaps, froth)
+    assert len(sims) == 2
+    assert sims[0] == pytest.approx(1.0)     # Jan: today == snapshot exactly
+    assert sims[1] == pytest.approx(-1.0)    # Feb: today's demeaned vector is the exact opposite
+
+
+def test_monthly_top1_similarities_none_when_no_analog_qualifies():
+    months = pd.to_datetime(["2020-01-31"])
+    froth: dict = {}
+    snaps = pd.DataFrame(columns=["episode", "offset_months", "indicator_id", "percentile"])
+    sims = backtest.monthly_top1_similarities(months, snaps, froth)
+    assert sims == [None]
+
+
 def test_criterion_flag_skips_episode():
     months = pd.date_range("1998-01-31", "2023-12-29", freq="BME")
     stage = pd.Series(0, index=months)

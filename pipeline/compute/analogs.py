@@ -9,8 +9,13 @@ def cosine(a: dict[str, float], b: dict[str, float], min_shared: int = 8) -> flo
     shared = sorted(set(a) & set(b))
     if len(shared) < min_shared:
         return None
-    va = [a[k] for k in shared]
-    vb = [b[k] for k in shared]
+    # Percentiles are all-positive (0-100), which floors raw cosine similarity near
+    # ~0.70-1.0 regardless of how dissimilar two profiles actually are (any two vectors
+    # of positive numbers point into the same orthant). Demean on 50 (the neutral
+    # percentile) before the dot/norm so similarity actually spans the full [-1, 1]
+    # range and can discriminate "opposite of today" from "just like today."
+    va = [a[k] - 50.0 for k in shared]
+    vb = [b[k] - 50.0 for k in shared]
     dot = sum(x * y for x, y in zip(va, vb))
     na = math.sqrt(sum(x * x for x in va))
     nb = math.sqrt(sum(y * y for y in vb))
