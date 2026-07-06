@@ -56,3 +56,12 @@ def test_downsample_keeps_last():
     assert len(out) <= 1000
     assert out.index[-1] == s.index[-1]
     assert out.iloc[-1] == s.iloc[-1]
+
+
+def test_downsample_never_exceeds_max():
+    for n in (999, 1000, 1001, 2000, 2500, 3000, 5000, 10000):
+        s = pd.Series(range(n), index=pd.date_range("1990-01-01", periods=n))
+        out = export.downsample(s, 1000)
+        assert len(out) <= 1000, n
+        assert out.index[-1] == s.index[-1]
+        assert out.iloc[-1] == s.iloc[-1]

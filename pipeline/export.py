@@ -17,7 +17,7 @@ def downsample(s: pd.Series, max_points: int = 1000) -> pd.Series:
     step = math.ceil(len(s) / max_points)
     keep = s.iloc[::step]
     if keep.index[-1] != s.index[-1]:
-        keep = pd.concat([keep, s.iloc[[-1]]])
+        keep = pd.concat([keep.iloc[: max_points - 1], s.iloc[[-1]]])
     return keep
 
 
@@ -43,15 +43,12 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     result = compute_scores(reg, thresholds, raw)
     as_of = max(s.index.max() for s in raw.values() if not s.empty)
     fresh = store.load_freshness()
-    # Offline fallback: if freshness.json has no record for a series (or the
-    # dashboard is exported without ever having run ingest), derive its
-    # last_obs directly from the committed raw CSV rather than treating it
-    # as unconditionally stale.
-    for s in reg.series:
-        if s.id not in fresh or fresh[s.id].get("last_obs") is None:
+    # Offline fallback: only backfill when freshness.json is entirely empty
+    # (true offline case). When freshness.json exists and is non-empty, use it as-is.
+    if not fresh:
+        for s in reg.series:
             r = raw.get(s.id)
             fresh[s.id] = {
-                **fresh.get(s.id, {}),
                 "last_obs": r.index.max().strftime("%Y-%m-%d") if r is not None and not r.empty else None,
             }
     stale = set(stale_series(reg, fresh, as_of))
