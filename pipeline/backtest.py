@@ -32,7 +32,12 @@ def evaluate_criteria(stage: pd.Series, engaged: pd.Series, episodes: list[dict]
     return crits
 
 
-def run_backtest(reg, thresholds, raw, epi_cfg, start: str = "1997-01-31") -> dict:
+def replay_monthly(reg, thresholds, raw, start: str = "1997-01-31"):
+    """Lag-shift `raw` to simulate publication-lag-adjusted history, compute scores
+    once against the lagged series, then replay the sequencer monthly from `start`
+    through the last available month-end. Returns (months, stage_s, engaged_s, state,
+    result, lagged) where `state` is the final sequencer state after the last month
+    in the replay."""
     lagged = {}
     lag_by_id = {s.id: s.lag_days for s in reg.series}
     for sid, s in raw.items():
@@ -48,6 +53,11 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = "1997-01-31") -> di
         engaged.append(state["engaged"])
     stage_s = pd.Series(stages, index=months)
     engaged_s = pd.Series(engaged, index=months)
+    return months, stage_s, engaged_s, state, result, lagged
+
+
+def run_backtest(reg, thresholds, raw, epi_cfg, start: str = "1997-01-31") -> dict:
+    months, stage_s, engaged_s, _state, result, _lagged = replay_monthly(reg, thresholds, raw, start)
 
     comp = pd.read_csv(paths.DATA_SCORES / "composite.csv", parse_dates=["date"])
     comp = comp[comp.window == "full"].set_index("date")["score"]

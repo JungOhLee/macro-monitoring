@@ -41,7 +41,7 @@ series:
   - {id: spy,    source: yahoo, source_id: SPY,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
   - {id: btcusd, source: yahoo, source_id: BTC-USD, frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
   # ---- Manual (see docs: FINRA/NYSE margin debt; drop data/raw/margin_debt.csv, date,value in $mn) ----
-  - {id: margin_debt, source: manual, source_id: "-", frequency: monthly, staleness_budget_days: 36500, revision_window_days: 0, lag_days: 25}
+  - {id: margin_debt, source: manual, source_id: "-", frequency: monthly, staleness_budget_days: 400, revision_window_days: 0, lag_days: 25}  # manual series: alert if no manual refresh for ~13 months
 
 indicators:
   # ---- Pillar A: valuation ----

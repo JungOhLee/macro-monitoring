@@ -223,8 +223,9 @@ function renderAnalogs() {
   }).catch(() => {});
 }
 
-function radarPoints(scores, cx, cy, rmax) {
-  const axes = ["valuation", "leverage", "liquidity", "sentiment", "macro"];
+const RADAR_AXES = ["valuation", "leverage", "liquidity", "sentiment", "macro"];
+
+function radarPoints(scores, axes, cx, cy, rmax) {
   return axes.map((p, i) => {
     const v = (scores[p] ?? 0) / 100;
     const ang = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
@@ -234,18 +235,28 @@ function radarPoints(scores, cx, cy, rmax) {
 
 function renderRadar() {
   const svg = document.getElementById("radar");
+  const note = document.getElementById("radar-note");
   const a = LATEST.analogs;
   svg.innerHTML = "";
+  if (note) note.textContent = "";
   if (!a || !a.top.length) return;
   const t = a.top[SEL_ANALOG];
   const ep = (EPISODES.pillar_scores[t.episode] || {})[String(t.offset_months)] || {};
   const today = {};
-  for (const [p, d] of Object.entries(LATEST.pillars)) today[p] = d.full ?? 0;
+  for (const [p, d] of Object.entries(LATEST.pillars)) today[p] = d.full ?? null;
   const cx = 150, cy = 135, rmax = 100;
-  const axes = ["valuation", "leverage", "liquidity", "sentiment", "macro"];
+  // Only draw axes with real data on BOTH polygons -- a pillar absent from the
+  // episode snapshot (not yet qualified, no 10y history) or from today must never
+  // be drawn as a false zero; it's dropped from the shape entirely.
+  const axes = RADAR_AXES.filter(p => ep[p] != null && today[p] != null);
+  const dropped = RADAR_AXES.filter(p => !axes.includes(p));
+  if (note && dropped.length) {
+    note.textContent = `Axes not shown (no data for this episode offset): ${dropped.map(p => PILLAR_LABEL[p]).join(", ")}`;
+  }
+  if (!axes.length) return;
   let grid = "";
   for (const frac of [0.25, 0.5, 0.75, 1]) {
-    const ring = radarPoints(Object.fromEntries(axes.map(p => [p, frac * 100])), cx, cy, rmax);
+    const ring = radarPoints(Object.fromEntries(axes.map(p => [p, frac * 100])), axes, cx, cy, rmax);
     grid += `<polygon points="${ring.map(p => p.join(",")).join(" ")}" fill="none" stroke="#2a3140" stroke-width="1"/>`;
   }
   const labels = axes.map((p, i) => {
@@ -254,7 +265,7 @@ function renderRadar() {
     return `<text x="${x}" y="${y}" fill="#8b93a3" font-size="10" text-anchor="middle">${PILLAR_LABEL[p].split(" ")[0]}</text>`;
   }).join("");
   const poly = (scores, color, fillOp) => {
-    const pts = radarPoints(scores, cx, cy, rmax).map(p => p.join(",")).join(" ");
+    const pts = radarPoints(scores, axes, cx, cy, rmax).map(p => p.join(",")).join(" ");
     return `<polygon points="${pts}" fill="${color}" fill-opacity="${fillOp}" stroke="${color}" stroke-width="1.6"/>`;
   };
   svg.innerHTML = grid + labels + poly(ep, "#d64545", 0.18) + poly(today, "#6ea8fe", 0.25) +

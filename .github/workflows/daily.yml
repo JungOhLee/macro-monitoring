@@ -36,6 +36,7 @@ jobs:
         run: |
           python -m pipeline run
           python -m pipeline export
+          python -m pipeline backtest
       - name: Commit data
         if: github.event_name != 'push'
         run: |

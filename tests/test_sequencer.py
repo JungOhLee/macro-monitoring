@@ -63,6 +63,79 @@ def test_missing_data_returns_none():
     assert seq._stage_spread_widening(CFG["stages"]["4"], {}, ASOF) is None
 
 
+def test_stage_pillar_above():
+    cfg = {"level": 80, "min_days": 100}
+    # pinned above the level for 200 business days -> True
+    idx = days(200)
+    s = pd.Series(85.0, index=idx)
+    assert seq._stage_pillar_above(cfg, s, ASOF) is True
+    # only the most recent 50 days sit above the level; the 75 before that are below it -> False
+    idx2 = days(125)
+    vals = np.concatenate([np.full(75, 60.0), np.full(50, 85.0)])
+    s2 = pd.Series(vals, index=idx2)
+    assert seq._stage_pillar_above(cfg, s2, ASOF) is False
+    # history shorter than min_days -> None (not enough data to judge)
+    idx3 = days(60)
+    s3 = pd.Series(85.0, index=idx3)
+    assert seq._stage_pillar_above(cfg, s3, ASOF) is None
+
+
+def test_stage_froth_rollover():
+    cfg = {"level": 85, "lookback_days": 365, "decline_obs": 2}
+    # froth peaks at 90 then the last 3 observations decline -> True
+    idx = days(60)
+    vals = np.concatenate([np.linspace(50, 90, 57), [88.0, 85.0, 80.0]])
+    s = pd.Series(vals, index=idx)
+    assert seq._stage_froth_rollover(cfg, s, ASOF) is True
+    # still rising into the close (like today's margin debt froth) -> False
+    idx2 = days(60)
+    s2 = pd.Series(np.linspace(50, 90, 60), index=idx2)
+    assert seq._stage_froth_rollover(cfg, s2, ASOF) is False
+    # no data -> None
+    assert seq._stage_froth_rollover(cfg, pd.Series(dtype=float), ASOF) is None
+
+
+def test_stage_breadth_divergence():
+    cfg = {"index": "spx", "near_high_pct": 2.0, "high_lookback_days": 365, "breadth_low_days": 126}
+    idx = days(300)
+    spx = pd.Series(np.linspace(4000, 5000, len(idx)), index=idx)  # at its 52wk high at asof
+    breadth_at_low = pd.Series(np.linspace(60, 10, len(idx)), index=idx)  # at its 126d low at asof
+    raw = {"spx": spx}
+    assert seq._stage_breadth_divergence(cfg, raw, breadth_at_low, ASOF) is True
+    # breadth well off its low -> False
+    breadth_off_low = pd.Series(
+        np.concatenate([np.linspace(60, 10, len(idx) - 5), np.full(5, 20.0)]), index=idx)
+    assert seq._stage_breadth_divergence(cfg, raw, breadth_off_low, ASOF) is False
+
+
+def test_evaluate_stages_wiring():
+    from pipeline.compute.scores import compute_scores
+    from tests.test_scores import TH as SCORES_TH, make_raw, make_reg
+
+    reg = make_reg()
+    raw = make_raw()
+    result = compute_scores(reg, SCORES_TH, raw)
+    th = {
+        "sequencer": {
+            "stages": {
+                "1": {"pillar": "valuation", "level": 80, "min_days": 5},
+                "2": {"indicator": "missing_indicator", "level": 85, "lookback_days": 365, "decline_obs": 2},
+                "3": {"series": "missing_series", "lookback_days": 548,
+                      "min_inverted_days": 21, "resteepen_level": 0.25},
+                "4": {"series": "missing_series", "low_lookback_days": 365, "widen": 0.60},
+                "5": {"index": "missing_series", "breadth": "missing_indicator", "near_high_pct": 2.0,
+                      "high_lookback_days": 365, "breadth_low_days": 126},
+                "6": {"index": "missing_series", "dma_days": 200, "sahm_series": "missing_series",
+                      "sahm_level": 0.5, "vix_series": "missing_series", "vix_level": 30},
+            }
+        }
+    }
+    asof = raw["up"].index.max()
+    fired = seq.evaluate_stages(reg, th, raw, result, asof)
+    assert set(fired.keys()) == {1, 2, 3, 4, 5, 6}
+    assert fired[2] is None  # margin_debt_yoy-style indicator absent from this synthetic registry
+
+
 def test_update_state_fire_lapse_and_engage():
     spx = pd.Series(np.full(300, 5000.0), index=days(300))
     state = seq.new_state()

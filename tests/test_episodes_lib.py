@@ -37,6 +37,27 @@ def test_pillar_scores_reweighted():
     assert val == pytest.approx(100.0, abs=0.5)
 
 
+def test_confirmation_excluded_from_pillar_scores():
+    reg = make_reg(with_confirmation=True)
+    raw = make_raw(with_confirmation=True)
+    snaps = epi.build_snapshots(reg, TH, raw, EPI_CFG)
+    # the confirmation-role indicator does show up in the raw snapshot library...
+    assert "i_conf" in snaps.indicator_id.unique()
+    ps = epi.pillar_scores_from_snapshots(reg, snaps)
+    # ...but must never surface in a reweighted pillar row
+    assert set(ps.pillar.unique()) == {"valuation", "leverage"}
+
+    reg_no_conf = make_reg()
+    snaps_no_conf = epi.build_snapshots(reg_no_conf, TH, make_raw(), EPI_CFG)
+    ps_no_conf = epi.pillar_scores_from_snapshots(reg_no_conf, snaps_no_conf)
+
+    val_with_conf = ps[(ps.episode == "boom") & (ps.offset_months == 0)
+                       & (ps.pillar == "valuation")].iloc[0]["score"]
+    val_no_conf = ps_no_conf[(ps_no_conf.episode == "boom") & (ps_no_conf.offset_months == 0)
+                             & (ps_no_conf.pillar == "valuation")].iloc[0]["score"]
+    assert val_with_conf == pytest.approx(val_no_conf)
+
+
 def test_firing_timeline_first_crossing():
     snaps = pd.DataFrame([
         {"episode": "e", "offset_months": -12, "indicator_id": "a", "percentile": 70.0},

@@ -5,39 +5,39 @@
  "stages": {
   "1": {
    "fired": true,
-   "fired_date": "2026-07-06",
+   "fired_date": "2022-10-31",
    "lapsed": false,
    "last_true": "2026-07-06"
   },
   "2": {
-   "fired": false,
-   "fired_date": null,
-   "lapsed": false,
-   "last_true": null
+   "fired": true,
+   "fired_date": "2025-12-31",
+   "lapsed": true,
+   "last_true": "2025-12-31"
   },
   "3": {
    "fired": true,
-   "fired_date": "2026-07-06",
+   "fired_date": "2025-12-31",
    "lapsed": false,
    "last_true": "2026-07-06"
   },
   "4": {
-   "fired": false,
-   "fired_date": null,
-   "lapsed": false,
-   "last_true": null
+   "fired": true,
+   "fired_date": "2022-10-31",
+   "lapsed": true,
+   "last_true": "2022-10-31"
   },
   "5": {
-   "fired": false,
-   "fired_date": null,
-   "lapsed": false,
-   "last_true": null
+   "fired": true,
+   "fired_date": "2025-06-30",
+   "lapsed": true,
+   "last_true": "2025-06-30"
   },
   "6": {
-   "fired": false,
-   "fired_date": null,
-   "lapsed": false,
-   "last_true": null
+   "fired": true,
+   "fired_date": "2026-03-31",
+   "lapsed": true,
+   "last_true": "2026-03-31"
   }
  }
 }

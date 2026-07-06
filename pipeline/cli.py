@@ -47,6 +47,35 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_seed_sequence(args: argparse.Namespace) -> int:
+    from pipeline.backtest import replay_monthly
+    from pipeline.compute.scores import compute_scores
+    from pipeline.compute.sequencer import STAGE_IDS, evaluate_stages, save_state, update_state
+    from pipeline.registry import load_thresholds
+
+    reg = load_registry()
+    raw = {s.id: store.read_series(s.id) for s in reg.series}
+    th = load_thresholds()
+
+    months, _stage_s, _engaged_s, state, _result, _lagged = replay_monthly(reg, th, raw)
+    print(f"replay: {len(months)} months {months[0]:%Y-%m-%d}..{months[-1]:%Y-%m-%d}; "
+          f"post-replay engaged={state['engaged']} current_stage={state['current_stage']}")
+
+    # One final update at the true latest as_of, same as cmd_run's daily step (no publication
+    # lag applied -- the stored raw series already reflect what's actually known today).
+    result = compute_scores(reg, th, raw)
+    asof = max(s.index.max() for s in raw.values() if not s.empty)
+    fired = evaluate_stages(reg, th, raw, result, asof)
+    state = update_state(state, fired, asof, raw.get("spx"), th["sequencer"])
+    save_state(state)
+
+    print(f"sequencer: engaged={state['engaged']} current_stage={state['current_stage']} as_of={state['as_of']}")
+    for n in STAGE_IDS:
+        st = state["stages"][str(n)]
+        print(f"  stage {n}: fired={st['fired']} fired_date={st['fired_date']} lapsed={st['lapsed']}")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     import pandas as pd
 
@@ -132,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="pipeline")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("run").set_defaults(fn=cmd_run)
+    sub.add_parser("seed-sequence").set_defaults(fn=cmd_seed_sequence)
     sub.add_parser("status").set_defaults(fn=cmd_status)
     sub.add_parser("export").set_defaults(fn=cmd_export)
     sub.add_parser("rebuild-episodes").set_defaults(fn=cmd_rebuild_episodes)

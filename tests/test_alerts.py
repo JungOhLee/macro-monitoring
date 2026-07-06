@@ -122,6 +122,27 @@ def test_stage_alert_outside_recency_window_not_emitted(env):
     assert [a.label for a in out] == []
 
 
+def test_stage_alert_gap_boundary_5_emitted(env):
+    # gap = as_of - fired_date = 5 days -> still inside the bounded recency window (0..5)
+    state = make_seq_state("2026-07-08", {
+        "1": {"fired": True, "fired_date": "2026-07-03", "lapsed": False},
+    })
+    sequencer.save_state(state)
+    out = alerts.evaluate_alerts(reg_one(), TH, pd.Timestamp("2026-07-08"))
+    assert "alert:stage-1" in [a.label for a in out]
+
+
+def test_stage_alert_gap_boundary_6_not_emitted(env):
+    # gap = 6 days -> just outside the bounded recency window, no alert
+    store.save_freshness({"s1": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-09", "error": None}})
+    state = make_seq_state("2026-07-09", {
+        "1": {"fired": True, "fired_date": "2026-07-03", "lapsed": False},
+    })
+    sequencer.save_state(state)
+    out = alerts.evaluate_alerts(reg_one(), TH, pd.Timestamp("2026-07-09"))
+    assert [a.label for a in out] == []
+
+
 def test_stage_alert_lapsed_not_emitted(env):
     # recent fired_date but stage has since lapsed -> no alert
     state = make_seq_state("2026-07-06", {
