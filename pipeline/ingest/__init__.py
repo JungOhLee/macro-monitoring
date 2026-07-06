@@ -15,6 +15,14 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
     fresh = store.load_freshness()
     for s in reg.series:
         stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if s.source == "manual":
+            stored = store.read_series(s.id)
+            fresh[s.id] = {
+                "last_fetch": stamp, "fetch_ok": True,
+                "last_obs": stored.index.max().strftime("%Y-%m-%d") if not stored.empty else None,
+                "error": None,
+            }
+            continue
         try:
             fetched = fetch_fred(s.source_id, api_key) if s.source == "fred" else fetch_yahoo(s.source_id)
             existing = store.read_series(s.id)

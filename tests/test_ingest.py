@@ -96,3 +96,16 @@ def test_isolation_survives_corrupt_stored_csv(tmp_path, monkeypatch):
     # Good series should complete successfully
     assert fresh["good"]["fetch_ok"] is True
     assert fresh["good"]["last_obs"] == "2026-07-03"
+
+
+def test_manual_source_skipped_and_fresh_from_csv(tmp_path, monkeypatch):
+    monkeypatch.setattr(store.paths, "DATA_RAW", tmp_path / "raw")
+    monkeypatch.setattr(store.paths, "DATA_STATE", tmp_path / "state")
+    reg = Registry(
+        series=[Series("man", "manual", "-", "monthly", 36500, 0, 25)],
+        indicators=[], pillar_weights={"valuation": 1.0})
+    store.write_series("man", pd.Series([1.0], index=pd.to_datetime(["2026-06-01"]), name="man"))
+    fresh = ingest.run_ingest(reg, api_key="K", now=pd.Timestamp("2026-07-06"))
+    assert fresh["man"]["fetch_ok"] is True
+    assert fresh["man"]["last_obs"] == "2026-06-01"
+    assert fresh["man"]["error"] is None

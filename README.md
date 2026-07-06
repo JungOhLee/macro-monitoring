@@ -2,7 +2,7 @@
 
 **Live dashboard: https://jungohlee.github.io/macro-monitoring/**
 
-A personal macro-economy monitor: 18 indicators across five pillars
+A personal macro-economy monitor: 19 indicators across five pillars
 (valuation, leverage, liquidity, sentiment, macro stress), each expressed as a
 historical percentile and combined into a 0-100 composite bubble score -
 updated daily by GitHub Actions, with crisis-comparison context.
@@ -18,6 +18,7 @@ updated daily by GitHub Actions, with crisis-comparison context.
   `python -m pipeline run && python -m pipeline export`.
 - **Status:** Phase 1-2 complete (scoring, dashboard, alerts, narrative drafts).
   Phase 3 adds the episode library, analog similarity, sequencing state machine,
-  and backtest. Phase 4 adds scraper-based indicators (margin debt, AAII, put/call).
+  margin debt (manual-source), and backtest. Phase 4 adds scraper-based
+  indicators (AAII, put/call).
 
 *Monitoring context, not a trading signal.*

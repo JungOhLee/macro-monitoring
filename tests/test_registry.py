@@ -4,8 +4,8 @@ from pipeline.registry import load_registry, load_thresholds
 
 def test_registry_loads_and_counts():
     reg = load_registry()
-    assert len(reg.series) == 24
-    assert len(reg.indicators) == 18
+    assert len(reg.series) == 25
+    assert len(reg.indicators) == 19
     assert abs(sum(reg.pillar_weights.values()) - 1.0) < 1e-9
     assert set(reg.pillar_weights) == {"valuation", "leverage", "liquidity", "sentiment", "macro"}
 
@@ -30,7 +30,7 @@ def test_enums_valid():
         assert ind.role in ("timing", "magnitude", "confirmation")
         assert ind.pillar in reg.pillar_weights
     for s in reg.series:
-        assert s.source in ("fred", "yahoo")
+        assert s.source in ("fred", "yahoo", "manual")
         assert s.frequency in ("daily", "weekly", "monthly", "quarterly")
 
 

@@ -40,6 +40,8 @@ series:
   - {id: rsp,    source: yahoo, source_id: RSP,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
   - {id: spy,    source: yahoo, source_id: SPY,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
   - {id: btcusd, source: yahoo, source_id: BTC-USD, frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
+  # ---- Manual (see docs: FINRA/NYSE margin debt; drop data/raw/margin_debt.csv, date,value in $mn) ----
+  - {id: margin_debt, source: manual, source_id: "-", frequency: monthly, staleness_budget_days: 36500, revision_window_days: 0, lag_days: 25}
 
 indicators:
   # ---- Pillar A: valuation ----
@@ -76,3 +78,6 @@ indicators:
      formula: ratio_dma_distance, inputs: [rsp, spy], lag_days: 1}
   - {id: dollar_spliced, name: "Trade-weighted dollar (spliced)", pillar: macro, role: confirmation, direction: normal,
      formula: splice, inputs: [dtwexbgs, dtwexm], lag_days: 1}
+  # ---- Pillar B: leverage (manual) ----
+  - {id: margin_debt_yoy, name: "FINRA margin debt YoY %", pillar: leverage, role: timing, direction: normal,
+     formula: yoy, inputs: [margin_debt], lag_days: 25}
