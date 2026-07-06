@@ -29,7 +29,9 @@ def _fetch_alphavantage_then_yahoo(source_id: str, av_api_key: str | None) -> pd
         try:
             return fetch_alphavantage(source_id, av_api_key)
         except Exception as exc:
-            av_failure = str(exc)
+            # keyed.py messages are already key-free, but this string reaches
+            # public CI logs before run_ingest's outer scrub — scrub here too.
+            av_failure = str(exc).replace(av_api_key, "***")
     if av_failure is not None:
         print(f"ingest: alphavantage miss for {source_id} ({av_failure}); trying yahoo")
     yahoo_failure = None

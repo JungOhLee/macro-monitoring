@@ -68,6 +68,8 @@ def _get_json(params: dict, series: str, api_key: str) -> dict:
     try:
         resp = requests.get(API_URL, params=params, timeout=30)
     except requests.RequestException as exc:
+        # NEVER interpolate str(exc) here: requests exceptions embed the full
+        # request URL, whose query string carries apikey=<key>.
         failure = f"Alpha Vantage request failed for {series}: {type(exc).__name__}"
     if failure is None and resp.status_code != 200:
         failure = f"Alpha Vantage HTTP {resp.status_code} for {series}"
