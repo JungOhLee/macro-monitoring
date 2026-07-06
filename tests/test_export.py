@@ -8,7 +8,15 @@ from pipeline.registry import Indicator, Registry, Series
 
 from tests.test_scores import BANDS, TH, make_raw, make_reg  # reuse fixtures
 
-THX = {**TH, "episode_peaks": ["2000-03-24", "2007-10-09"]}
+THX = TH
+
+EPI_STUB = {
+    "episodes": [
+        {"id": "dotcom", "name": "Dot-com bust", "peak": "2000-03-24"},
+        {"id": "gfc", "name": "Global Financial Crisis", "peak": "2007-10-09"},
+    ],
+    "offsets_months": [-24, -12, 0],
+}
 
 
 @pytest.fixture()
@@ -21,7 +29,10 @@ def site(tmp_path, monkeypatch):
     return tmp_path / "site_data"
 
 
-def test_export_writes_three_files_with_contract(site):
+def test_export_writes_three_files_with_contract(site, monkeypatch):
+    import pipeline.registry as registry
+
+    monkeypatch.setattr(registry, "load_episodes", lambda: EPI_STUB)
     payload = export.export_site(make_reg(with_confirmation=True), THX)
     latest = json.loads((site / "latest.json").read_text())
     history = json.loads((site / "history.json").read_text())
@@ -36,6 +47,10 @@ def test_export_writes_three_files_with_contract(site):
     assert latest["freshness"]["up"]["stale"] is False
 
     assert history["episode_peaks"] == ["2000-03-24", "2007-10-09"]
+    assert history["crisis_markers"] == [
+        {"date": "2000-03-24", "name": "Dot-com bust", "library": True},
+        {"date": "2007-10-09", "name": "Global Financial Crisis", "library": True},
+    ]
     assert len(history["full"]["dates"]) == len(history["full"]["composite"])
     assert set(history["full"]["pillars"]) <= {"valuation", "leverage", "sentiment"}
 
@@ -60,6 +75,29 @@ def test_downsample_keeps_last():
     assert len(out) <= 1000
     assert out.index[-1] == s.index[-1]
     assert out.iloc[-1] == s.iloc[-1]
+
+
+def test_crisis_markers_exported(site, monkeypatch):
+    import pipeline.registry as registry
+
+    epi_cfg = {
+        "episodes": [
+            {"id": "b", "name": "Beta library", "peak": "2005-06-15"},
+            {"id": "a", "name": "Alpha library", "peak": "2001-01-10"},
+            {"id": "m", "name": "Marker only", "peak": "2003-03-03", "library": False},
+        ],
+        "offsets_months": [-12, -1, 0],
+    }
+    monkeypatch.setattr(registry, "load_episodes", lambda: epi_cfg)
+    export.export_site(make_reg(), THX)
+    history = json.loads((site / "history.json").read_text())
+
+    assert history["crisis_markers"] == [
+        {"date": "2001-01-10", "name": "Alpha library", "library": True},
+        {"date": "2003-03-03", "name": "Marker only", "library": False},
+        {"date": "2005-06-15", "name": "Beta library", "library": True},
+    ]
+    assert history["episode_peaks"] == ["2001-01-10", "2003-03-03", "2005-06-15"]
 
 
 def test_export_writes_episodes_json(site, monkeypatch, tmp_path):

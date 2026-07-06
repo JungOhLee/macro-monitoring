@@ -130,8 +130,12 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     }
 
     # ---- history.json (weekly downsample) ----
+    all_eps = sorted(epi_cfg["episodes"], key=lambda e: e["peak"])
     history: dict = {
-        "episode_peaks": thresholds.get("episode_peaks", []),
+        "crisis_markers": [
+            {"date": e["peak"], "name": e["name"], "library": e.get("library", True)} for e in all_eps
+        ],
+        "episode_peaks": [e["peak"] for e in all_eps],
         "regime_bands": thresholds["regime_bands"],
     }
     for window in ("full", "rolling20y"):

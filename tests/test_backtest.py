@@ -31,3 +31,22 @@ def test_criteria_evaluation():
     stage.loc["2019-01-31":"2019-12-31"] = 3
     crits2 = backtest.evaluate_criteria(stage, stage >= 2, epi)
     assert {c["name"]: c["pass"] for c in crits2}["quiet through 2019 (covid control)"] is False
+
+
+def test_criterion_flag_skips_episode():
+    months = pd.date_range("1998-01-31", "2023-12-29", freq="BME")
+    stage = pd.Series(0, index=months)
+    stage.loc["1999-06-30":"2000-03-31"] = 4      # hot before dot-com
+    stage.loc["2007-01-31":"2007-10-31"] = 4      # hot before gfc
+    engaged = stage >= 2
+    epi = [{"id": "dotcom", "peak": "2000-03-24"}, {"id": "gfc", "peak": "2007-10-09"},
+           {"id": "marker_only", "peak": "1990-07-16", "criterion": False},
+           {"id": "covid", "peak": "2020-02-19", "control": True}]
+    crits = backtest.evaluate_criteria(stage, engaged, epi)
+    names = {c["name"] for c in crits}
+    assert "stage>=4 before marker_only peak" not in names
+    # existing entries unaffected
+    assert "stage>=4 before dotcom peak" in names
+    assert "stage>=4 before gfc peak" in names
+    assert "quiet through 2019 (covid control)" in names
+    assert len(crits) == 3

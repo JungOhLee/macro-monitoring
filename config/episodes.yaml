@@ -3,4 +3,10 @@ episodes:
   - {id: gfc,       name: "Global Financial Crisis", peak: "2007-10-09"}
   - {id: covid,     name: "COVID crash",             peak: "2020-02-19", control: true}
   - {id: postcovid, name: "Post-COVID unwind",       peak: "2022-01-03"}
+  - {id: oil1973,     name: "1973-74 oil-shock bear",   peak: "1973-01-11", criterion: false}
+  - {id: volcker1980, name: "Volcker double-dip",        peak: "1980-11-28", criterion: false}
+  - {id: black1987,   name: "Black Monday 1987",         peak: "1987-08-25", criterion: false}
+  - {id: rec1990,     name: "1990 recession bear",       peak: "1990-07-16"}
+  - {id: gd1929,      name: "Great Depression crash",    peak: "1929-09-16", library: false, criterion: false}
+  - {id: rec1937,     name: "1937 relapse",              peak: "1937-03-10", library: false, criterion: false}
 offsets_months: [-24, -18, -12, -9, -6, -3, -1, 0, 6, 12]

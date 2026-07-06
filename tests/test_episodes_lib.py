@@ -58,6 +58,20 @@ def test_confirmation_excluded_from_pillar_scores():
     assert val_with_conf == pytest.approx(val_no_conf)
 
 
+def test_marker_only_episodes_excluded_from_snapshots():
+    reg = make_reg()
+    cfg = {
+        "episodes": [
+            {"id": "marker_only", "name": "Marker only", "peak": "2011-06-30", "library": False},
+            {"id": "sibling", "name": "Sibling library episode", "peak": "2012-06-30"},
+        ],
+        "offsets_months": [-12, -1, 0],
+    }
+    snaps = epi.build_snapshots(reg, TH, make_raw(), cfg)
+    assert snaps[snaps.episode == "marker_only"].empty
+    assert not snaps[snaps.episode == "sibling"].empty
+
+
 def test_firing_timeline_first_crossing():
     snaps = pd.DataFrame([
         {"episode": "e", "offset_months": -12, "indicator_id": "a", "percentile": 70.0},

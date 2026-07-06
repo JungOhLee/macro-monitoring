@@ -11,6 +11,8 @@ def build_snapshots(reg: Registry, thresholds: dict, raw: dict, epi_cfg: dict) -
     result = compute_scores(reg, thresholds, raw)
     rows = []
     for ep in epi_cfg["episodes"]:
+        if ep.get("library") is False:
+            continue
         peak = pd.Timestamp(ep["peak"])
         for off in epi_cfg["offsets_months"]:
             snap_date = peak + pd.DateOffset(months=off)

@@ -8,6 +8,8 @@ from pipeline.compute.episodes import load_snapshots
 from pipeline.compute.scores import compute_scores
 from pipeline.compute.sequencer import evaluate_stages, new_state, update_state
 
+REPLAY_START = "1987-01-30"
+
 
 def apply_lag(s: pd.Series, lag_days: int) -> pd.Series:
     out = s.copy()
@@ -18,6 +20,8 @@ def apply_lag(s: pd.Series, lag_days: int) -> pd.Series:
 def evaluate_criteria(stage: pd.Series, engaged: pd.Series, episodes: list[dict]) -> list[dict]:
     crits = []
     for ep in episodes:
+        if ep.get("criterion") is False:
+            continue
         peak = pd.Timestamp(ep["peak"])
         if ep.get("control"):
             window = engaged[(engaged.index >= "2019-01-01") & (engaged.index <= "2019-12-31")]
@@ -32,7 +36,7 @@ def evaluate_criteria(stage: pd.Series, engaged: pd.Series, episodes: list[dict]
     return crits
 
 
-def replay_monthly(reg, thresholds, raw, start: str = "1997-01-31"):
+def replay_monthly(reg, thresholds, raw, start: str = REPLAY_START):
     """Lag-shift `raw` to simulate publication-lag-adjusted history, compute scores
     once against the lagged series, then replay the sequencer monthly from `start`
     through the last available month-end. Returns (months, stage_s, engaged_s, state,
@@ -56,7 +60,7 @@ def replay_monthly(reg, thresholds, raw, start: str = "1997-01-31"):
     return months, stage_s, engaged_s, state, result, lagged
 
 
-def run_backtest(reg, thresholds, raw, epi_cfg, start: str = "1997-01-31") -> dict:
+def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> dict:
     months, stage_s, engaged_s, _state, result, _lagged = replay_monthly(reg, thresholds, raw, start)
 
     comp = pd.read_csv(paths.DATA_SCORES / "composite.csv", parse_dates=["date"])

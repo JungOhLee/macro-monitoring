@@ -10,8 +10,6 @@ alerts:
   pillar_extreme_level: 90
   cooldown_days: 7
 
-episode_peaks: ["2000-03-24", "2007-10-09", "2020-02-19", "2022-01-03"]
-
 stress_bands:   # confirmation-indicator gauge; ascending upper bounds
   - {name: quiet,      upper: 40}
   - {name: elevated,   upper: 70}

@@ -48,7 +48,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_seed_sequence(args: argparse.Namespace) -> int:
-    from pipeline.backtest import replay_monthly
+    from pipeline.backtest import REPLAY_START, replay_monthly
     from pipeline.compute.scores import compute_scores
     from pipeline.compute.sequencer import STAGE_IDS, evaluate_stages, save_state, update_state
     from pipeline.registry import load_thresholds
@@ -57,7 +57,7 @@ def cmd_seed_sequence(args: argparse.Namespace) -> int:
     raw = {s.id: store.read_series(s.id) for s in reg.series}
     th = load_thresholds()
 
-    months, _stage_s, _engaged_s, state, _result, _lagged = replay_monthly(reg, th, raw)
+    months, _stage_s, _engaged_s, state, _result, _lagged = replay_monthly(reg, th, raw, start=REPLAY_START)
     print(f"replay: {len(months)} months {months[0]:%Y-%m-%d}..{months[-1]:%Y-%m-%d}; "
           f"post-replay engaged={state['engaged']} current_stage={state['current_stage']}")
 
