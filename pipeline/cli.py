@@ -77,13 +77,15 @@ def cmd_alerts(args: argparse.Namespace) -> int:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
-    from pipeline.export import export_site
+    from pipeline.export import export_site, render_episodes
     from pipeline.registry import load_thresholds
 
     reg = load_registry()
     latest = export_site(reg, load_thresholds())
     print(f"export: site/data written, as_of {latest['as_of']}, "
           f"composite {latest['composite']['full']['score']} ({latest['composite']['full']['regime']})")
+    names = render_episodes()
+    print(f"episodes: rendered {', '.join(names) or 'none'}")
     return 0
 
 

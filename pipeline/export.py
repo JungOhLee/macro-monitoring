@@ -144,3 +144,31 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     _atomic_write(paths.SITE_DATA / "history.json", history)
     _atomic_write(paths.SITE_DATA / "indicators.json", indicators)
     return latest
+
+
+EPISODE_TEMPLATE = """<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} - Macro Bubble Monitor</title>
+<link rel="stylesheet" href="../assets/style.css"></head>
+<body><header><h1><a href="../index.html" style="text-decoration:none;color:inherit">&larr; Macro Bubble Monitor</a></h1></header>
+<article class="card">{body}</article>
+<footer class="muted">Monitoring context, not a trading signal.</footer>
+</body></html>
+"""
+
+
+def render_episodes() -> list[str]:
+    import markdown
+
+    outdir = paths.SITE / "episodes"
+    names = []
+    for md_file in sorted(paths.EPISODES.glob("*.md")):
+        text = md_file.read_text()
+        title = text.splitlines()[0].lstrip("# ").strip()
+        body = markdown.markdown(text)
+        outdir.mkdir(parents=True, exist_ok=True)
+        (outdir / f"{md_file.stem}.html").write_text(
+            EPISODE_TEMPLATE.format(title=title, body=body))
+        names.append(md_file.stem)
+    return names
