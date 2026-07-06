@@ -57,6 +57,25 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 1 if stale else 0
 
 
+def cmd_alerts(args: argparse.Namespace) -> int:
+    import pandas as pd
+
+    from pipeline.alerts import Alert, deliver, evaluate_alerts
+    from pipeline.registry import load_thresholds
+
+    th = load_thresholds()
+    if args.test:
+        deliver([Alert("data-health", "Test alert - please ignore",
+                       "Verifying the alert email path. Close me.")], cooldown_days=0)
+        return 0
+    reg = load_registry()
+    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    found = evaluate_alerts(reg, th, now)
+    deliver(found, th["alerts"]["cooldown_days"])
+    print(f"alerts: {len(found)} rule(s) fired")
+    return 0
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     from pipeline.export import export_site
     from pipeline.registry import load_thresholds
@@ -74,5 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("run").set_defaults(fn=cmd_run)
     sub.add_parser("status").set_defaults(fn=cmd_status)
     sub.add_parser("export").set_defaults(fn=cmd_export)
+    ap = sub.add_parser("alerts")
+    ap.add_argument("--test", action="store_true")
+    ap.set_defaults(fn=cmd_alerts)
     args = p.parse_args(argv)
     return args.fn(args)

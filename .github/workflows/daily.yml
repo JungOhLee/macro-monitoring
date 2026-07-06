@@ -33,8 +33,10 @@ jobs:
         if: github.event_name != 'push'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           python -m pipeline run
+          python -m pipeline alerts
           python -m pipeline export
       - name: Commit data
         if: github.event_name != 'push'
@@ -42,7 +44,11 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add data site/data
-          git commit -m "data: daily update" || echo "nothing to commit"
+          if ! git diff --cached --quiet; then
+            git commit -m "data: daily update"
+          else
+            echo "nothing to commit"
+          fi
           git pull --rebase origin main
           git push
       - name: Refresh site JSON for artifact (push builds)
@@ -54,6 +60,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
