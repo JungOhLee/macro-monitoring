@@ -4,6 +4,19 @@ const REGIME = {
   frothy: ["Frothy", "var(--frothy)", "#e07b3c"],
   bubble_risk: ["Bubble risk", "var(--bubble)", "#d64545"],
 };
+// Fallback regime band edges, used only if history.json has no regime_bands field.
+const DEFAULT_REGIME_BANDS = [
+  { name: "cool", upper: 40 },
+  { name: "warm", upper: 70 },
+  { name: "frothy", upper: 85 },
+  { name: "bubble_risk", upper: 100 },
+];
+// Returns the three interior edges [cool-upper, warm-upper, frothy-upper]; the
+// bubble_risk band always tops out at 100.
+function regimeEdges() {
+  const bands = (HISTORY && HISTORY.regime_bands) || DEFAULT_REGIME_BANDS;
+  return [bands[0].upper, bands[1].upper, bands[2].upper];
+}
 const PILLAR_LABEL = { valuation:"Valuation", leverage:"Leverage & credit",
   liquidity:"Liquidity & monetary", sentiment:"Sentiment & speculation", macro:"Macro stress & breadth" };
 const HISTORY_TABS = [
@@ -66,16 +79,17 @@ function comp() { return LATEST.composite[WIN] || LATEST.composite.full; }
 function renderGauge() {
   const c = comp();
   const [label, , hex] = REGIME[c.regime];
+  const [e1, e2, e3] = regimeEdges();
   Plotly.newPlot("gauge", [{
     type: "indicator", mode: "gauge+number", value: c.score,
     gauge: {
-      axis: { range: [0, 100], tickvals: [0, 40, 70, 85, 100] },
+      axis: { range: [0, 100], tickvals: [0, e1, e2, e3, 100] },
       bar: { color: hex },
       steps: [
-        { range: [0, 40], color: "rgba(76,175,125,.25)" },
-        { range: [40, 70], color: "rgba(224,184,60,.25)" },
-        { range: [70, 85], color: "rgba(224,123,60,.25)" },
-        { range: [85, 100], color: "rgba(214,69,69,.3)" },
+        { range: [0, e1], color: "rgba(76,175,125,.25)" },
+        { range: [e1, e2], color: "rgba(224,184,60,.25)" },
+        { range: [e2, e3], color: "rgba(224,123,60,.25)" },
+        { range: [e3, 100], color: "rgba(214,69,69,.3)" },
       ],
     },
   }], { ...PLOT_BASE, height: 210, margin: {l:25,r:25,t:20,b:5} }, CFG);
@@ -86,6 +100,7 @@ function renderGauge() {
 function renderPillars() {
   const el = document.getElementById("pillars");
   el.innerHTML = "";
+  const [e1, e2, e3] = regimeEdges();
   for (const [p, d] of Object.entries(LATEST.pillars)) {
     const score = d[WIN];
     const row = document.createElement("div");
@@ -93,7 +108,7 @@ function renderPillars() {
     const deltas = [d.delta_1m, d.delta_3m]
       .map(x => x == null ? "–" : (x > 0 ? "+" : "") + x.toFixed(1)).join(" / ");
     const color = score == null ? "#555" :
-      score >= 85 ? "#d64545" : score >= 70 ? "#e07b3c" : score >= 40 ? "#e0b83c" : "#4caf7d";
+      score >= e3 ? "#d64545" : score >= e2 ? "#e07b3c" : score >= e1 ? "#e0b83c" : "#4caf7d";
     row.innerHTML =
       `<div>${PILLAR_LABEL[p]}${d.partial ? '<span class="chip">partial</span>' : ""}</div>` +
       `<div class="bar-track"><div class="bar-fill" style="width:${score ?? 0}%;background:${color}"></div></div>` +
@@ -155,8 +170,9 @@ function renderHistory() {
   }
   traces.push(crisisLabels(97));
   const shapes = crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
-  const bands = [[0,40,"rgba(76,175,125,.05)"],[40,70,"rgba(224,184,60,.05)"],
-                 [70,85,"rgba(224,123,60,.06)"],[85,100,"rgba(214,69,69,.08)"]];
+  const [e1, e2, e3] = regimeEdges();
+  const bands = [[0,e1,"rgba(76,175,125,.05)"],[e1,e2,"rgba(224,184,60,.05)"],
+                 [e2,e3,"rgba(224,123,60,.06)"],[e3,100,"rgba(214,69,69,.08)"]];
   for (const [y0,y1,c] of bands)
     shapes.push({ type:"rect", xref:"paper", x0:0, x1:1, y0, y1, fillcolor:c, line:{width:0} });
   Plotly.newPlot("history", traces,

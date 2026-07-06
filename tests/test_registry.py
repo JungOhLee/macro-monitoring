@@ -48,6 +48,19 @@ def test_thresholds_load():
     assert th["alerts"]["cooldown_days"] == 7
 
 
+def test_regime_bands_calibrated_to_historical_quantiles():
+    # Anchored to the 1975-2026 full-window composite quantiles: 50th=64.09,
+    # 85th=76.33, 95th=82.96 (rounded to nearest integer). See docs/superpowers/
+    # specs/2026-07-05-macro-monitor-design.md amendment dated 2026-07-06.
+    th = load_thresholds()
+    assert th["regime_bands"] == [
+        {"name": "cool", "upper": 64},
+        {"name": "warm", "upper": 76},
+        {"name": "frothy", "upper": 83},
+        {"name": "bubble_risk", "upper": 100},
+    ]
+
+
 def test_bad_registry_rejected(tmp_path):
     bad = tmp_path / "registry.yaml"
     bad.write_text(

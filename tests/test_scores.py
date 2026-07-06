@@ -54,6 +54,21 @@ def test_regime_for():
     assert scores.regime_for(99.0, BANDS) == "bubble_risk"
 
 
+def test_regime_for_production_bands_calibrated_edges():
+    # Pins the production regime_bands (config/thresholds.yaml) recalibrated to
+    # the 1975-2026 full-window composite quantiles: cool<64 (50th=64.09),
+    # warm<76 (85th=76.33), frothy<83 (95th=82.96), else bubble_risk.
+    from pipeline.registry import load_thresholds
+
+    bands = load_thresholds()["regime_bands"]
+    assert scores.regime_for(63.99, bands) == "cool"
+    assert scores.regime_for(64.0, bands) == "warm"
+    assert scores.regime_for(75.99, bands) == "warm"
+    assert scores.regime_for(76.0, bands) == "frothy"
+    assert scores.regime_for(82.99, bands) == "frothy"
+    assert scores.regime_for(83.0, bands) == "bubble_risk"
+
+
 def test_compute_scores_math_and_gating():
     res = scores.compute_scores(make_reg(), TH, make_raw())
     comp_full = res.composite[res.composite.window == "full"].set_index("date")

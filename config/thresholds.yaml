@@ -1,7 +1,10 @@
 regime_bands:   # ascending upper bounds; last band has bound 100
-  - {name: cool,        upper: 40}
-  - {name: warm,        upper: 70}
-  - {name: frothy,      upper: 85}
+  # Recalibrated 2026-07-06 to the 1975-2026 full-window composite quantiles:
+  # 50th=64.09 -> 64, 85th=76.33 -> 76, 95th=82.96 -> 83 (rounded to nearest
+  # integer). See docs/superpowers/specs/2026-07-05-macro-monitor-design.md.
+  - {name: cool,        upper: 64}
+  - {name: warm,        upper: 76}
+  - {name: frothy,      upper: 83}
   - {name: bubble_risk, upper: 100}
 
 score_start: "1975-01-01"   # first date scores are computed for
