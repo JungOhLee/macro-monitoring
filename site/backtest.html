@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backtest - Macro Bubble Monitor</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header><h1><a href="index.html" style="text-decoration:none;color:inherit">&larr; Macro Bubble Monitor</a></h1>
+<div class="muted">Sequencer &amp; score replay (monthly, publication-lag adjusted)</div></header>
+<section class="card"><div id="bt-chart"></div></section>
+<section class="card"><h2>Validation criteria</h2><div id="bt-criteria"></div></section>
+<footer class="muted">Monitoring context, not a trading signal.</footer>
+<script src="assets/plotly-finance.min.js"></script>
+<script>
+fetch("data/backtest.json").then(r => r.json()).then(bt => {
+  const shapes = bt.episodes.filter(e => !e.control).map(e => {
+    const peak = new Date(e.peak); const start = new Date(peak); start.setMonth(start.getMonth() - 24);
+    return { type: "rect", x0: start.toISOString().slice(0,10), x1: e.peak, y0: 0, y1: 1,
+             yref: "paper", fillcolor: "rgba(214,69,69,.08)", line: { width: 0 } };
+  });
+  Plotly.newPlot("bt-chart", [
+    { x: bt.months, y: bt.spx, name: "S&P 500 (log)", yaxis: "y", line: { color: "#e6e9ef", width: 1.4 } },
+    { x: bt.months, y: bt.composite, name: "Composite", yaxis: "y2", line: { color: "#e0b83c", width: 1.2 } },
+    { x: bt.months, y: bt.stage, name: "Sequence stage", yaxis: "y3", line: { color: "#d64545", width: 1.2, shape: "hv" } },
+  ], { paper_bgcolor: "#1b2029", plot_bgcolor: "#1b2029", font: { color: "#e6e9ef", size: 12 },
+       height: 520, shapes, grid: { rows: 3, columns: 1, roworder: "top to bottom" },
+       yaxis: { type: "log", title: { text: "S&P 500" } },
+       yaxis2: { range: [0, 100], title: { text: "score" } },
+       yaxis3: { range: [0, 6.5], dtick: 1, title: { text: "stage" } },
+       legend: { orientation: "h", y: -0.08 } }, { displayModeBar: false, responsive: true });
+  document.getElementById("bt-criteria").innerHTML = "<ul>" + bt.criteria.map(c =>
+    `<li>${c.pass ? "✅" : "❌"} ${c.name} <span class="muted">(${c.detail})</span></li>`).join("") + "</ul>";
+});
+</script>
+</body>
+</html>

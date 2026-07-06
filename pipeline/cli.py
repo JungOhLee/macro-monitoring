@@ -98,6 +98,23 @@ def cmd_rebuild_episodes(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_backtest(args: argparse.Namespace) -> int:
+    from pipeline.backtest import run_backtest
+    from pipeline.export import _atomic_write
+    from pipeline.registry import load_episodes, load_thresholds
+
+    reg = load_registry()
+    raw = {s.id: store.read_series(s.id) for s in reg.series}
+    payload = run_backtest(reg, load_thresholds(), raw, load_episodes())
+    _atomic_write(paths.SITE_DATA / "backtest.json", payload)
+    for c in payload["criteria"]:
+        print(f"{'PASS' if c['pass'] else 'FAIL'}  {c['name']}  ({c['detail']})")
+    br = payload["base_rate"]
+    print(f"base rate: similarity>={br['threshold']} in {br['n_high_outside']} months outside "
+          f"pre-crisis windows, {br['n_high_inside']} inside, of {br['n_months']}")
+    return 0
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     from pipeline.export import export_site, render_episodes
     from pipeline.registry import load_thresholds
@@ -118,6 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status").set_defaults(fn=cmd_status)
     sub.add_parser("export").set_defaults(fn=cmd_export)
     sub.add_parser("rebuild-episodes").set_defaults(fn=cmd_rebuild_episodes)
+    sub.add_parser("backtest").set_defaults(fn=cmd_backtest)
     ap = sub.add_parser("alerts")
     ap.add_argument("--test", action="store_true")
     ap.set_defaults(fn=cmd_alerts)

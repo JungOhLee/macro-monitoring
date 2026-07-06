@@ -214,6 +214,13 @@ function renderAnalogs() {
       SEL_ANALOG = +row.dataset.i;
       renderAnalogs(); renderRadar(); renderAnalogTable();
     }));
+  fetch("data/backtest.json").then(r => r.ok ? r.json() : null).then(bt => {
+    if (!bt) return;
+    const br = bt.base_rate;
+    list.insertAdjacentHTML("beforeend",
+      `<div class="muted" style="margin-top:6px;font-size:.75rem">Base rate: similarity ≥ ${br.threshold * 100}% occurred in ` +
+      `${br.n_high_outside} of ${br.n_months} months OUTSIDE pre-crisis windows (small-sample caveat).</div>`);
+  }).catch(() => {});
 }
 
 function radarPoints(scores, cx, cy, rmax) {
