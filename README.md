@@ -15,7 +15,9 @@ updated daily by GitHub Actions, with crisis-comparison context.
 - **Local use:** clone; `pip install -e '.[dev]'`; view with
   `python -m http.server -d site` (no credentials needed). To refresh data
   yourself: put a free FRED key in `.env` (`FRED_API_KEY=...`) and run
-  `python -m pipeline run && python -m pipeline export`.
+  `python -m pipeline run && python -m pipeline export`. `rsp`/`spy`/`btcusd`
+  use Alpha Vantage when `ALPHAVANTAGE_KEY` is set (in `.env` locally or as a
+  repo secret in CI), otherwise Yahoo - currently dormant pending a key.
 - **Status:** Phase 1-2 complete (scoring, dashboard, alerts, narrative drafts).
   **Phase 3 complete:** role-aware composite + stress gauge, analog similarity
   with SVG radar, pre-crisis sequence tracker,

@@ -6,12 +6,32 @@ import pandas as pd
 
 from pipeline import store
 from pipeline.ingest.fred import fetch_fred
+from pipeline.ingest.keyed import fetch_alphavantage
 from pipeline.ingest.shiller import fetch_shiller
 from pipeline.ingest.yahoo import fetch_yahoo
 from pipeline.registry import Registry
 
+# Alpha Vantage symbols that don't match their Yahoo ticker (BTC's Alpha
+# Vantage symbol is "BTC"; Yahoo's is "BTC-USD"). rsp/spy match as-is.
+_YAHOO_SYMBOL_OVERRIDES = {"BTC": "BTC-USD"}
 
-def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> dict:
+
+def _fetch_alphavantage_then_yahoo(source_id: str, av_api_key: str | None) -> pd.Series:
+    """Keyed-then-fallback dispatch: no key -> straight to Yahoo (current
+    behavior, unchanged); key present -> try Alpha Vantage first, and on ANY
+    failure fall back to Yahoo. A fallback success is a success -- there is
+    no separate failure counted for the keyed miss."""
+    if av_api_key:
+        try:
+            return fetch_alphavantage(source_id, av_api_key)
+        except Exception:
+            pass
+    return fetch_yahoo(_YAHOO_SYMBOL_OVERRIDES.get(source_id, source_id))
+
+
+def run_ingest(
+    reg: Registry, api_key: str, av_api_key: str | None = None, now: pd.Timestamp | None = None
+) -> dict:
     now = now or pd.Timestamp(datetime.now(timezone.utc).date())
     fresh = store.load_freshness()
     for s in reg.series:
@@ -29,6 +49,8 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
                 fetched = fetch_fred(s.source_id, api_key)
             elif s.source == "yahoo":
                 fetched = fetch_yahoo(s.source_id)
+            elif s.source == "alphavantage":
+                fetched = _fetch_alphavantage_then_yahoo(s.source_id, av_api_key)
             else:
                 fetched = fetch_shiller(s.source_id)
             existing = store.read_series(s.id)
@@ -46,6 +68,8 @@ def run_ingest(reg: Registry, api_key: str, now: pd.Timestamp | None = None) -> 
             if api_key:
                 # freshness.json is committed to a public repo — never persist the key
                 err = err.replace(api_key, "***")
+            if av_api_key:
+                err = err.replace(av_api_key, "***")
             prev = fresh.get(s.id, {})
             try:
                 stored = store.read_series(s.id)

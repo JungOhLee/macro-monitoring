@@ -37,10 +37,11 @@ series:
   - {id: cfnai,       source: fred, source_id: CFNAI,       frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 400, lag_days: 25}
   # ---- FRED (S&P daily level; deep history seeded one-time from Yahoo ^GSPC) ----
   - {id: spx,    source: fred,  source_id: SP500,   frequency: daily, staleness_budget_days: 7,  revision_window_days: 7, lag_days: 1}
-  # ---- Yahoo chart API (best-effort from CI; 14d budgets absorb datacenter blocks) ----
-  - {id: rsp,    source: yahoo, source_id: RSP,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
-  - {id: spy,    source: yahoo, source_id: SPY,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
-  - {id: btcusd, source: yahoo, source_id: BTC-USD, frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
+  # ---- Alpha Vantage when ALPHAVANTAGE_KEY is set, else Yahoo chart API fallback (best-effort
+  # from CI; 14d budgets absorb datacenter blocks either way) ----
+  - {id: rsp,    source: alphavantage, source_id: RSP,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
+  - {id: spy,    source: alphavantage, source_id: SPY,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
+  - {id: btcusd, source: alphavantage, source_id: BTC,     frequency: daily, staleness_budget_days: 14, revision_window_days: 7, lag_days: 1}
   # ---- Shiller (ie_data.xls; shillerdata.com primary, econ.yale.edu fallback -- see pipeline/ingest/shiller.py) ----
   - {id: shiller_cape, source: shiller, source_id: "-", frequency: monthly, staleness_budget_days: 110, revision_window_days: 60, lag_days: 20}
   # ---- Manual (see docs: FINRA/NYSE margin debt; drop data/raw/margin_debt.csv, date,value in $mn) ----

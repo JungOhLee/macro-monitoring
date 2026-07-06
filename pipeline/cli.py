@@ -20,12 +20,18 @@ def _api_key() -> str:
     return key
 
 
+def _av_api_key() -> str | None:
+    # Optional and dormant: rsp/spy/btcusd fall back to Yahoo when unset.
+    load_dotenv()
+    return os.environ.get("ALPHAVANTAGE_KEY") or None
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     from pipeline.compute.scores import append_scores, compute_scores
     from pipeline.registry import load_thresholds
 
     reg = load_registry()
-    fresh = run_ingest(reg, api_key=_api_key())
+    fresh = run_ingest(reg, api_key=_api_key(), av_api_key=_av_api_key())
     failed = [k for k, v in fresh.items() if not v["fetch_ok"]]
     print(f"ingest: {len(reg.series) - len(failed)}/{len(reg.series)} series ok"
           + (f"; failed: {', '.join(failed)}" if failed else ""))
