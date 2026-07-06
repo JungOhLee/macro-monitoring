@@ -35,13 +35,24 @@ const PLOT_BASE = { paper_bgcolor:"#1b2029", plot_bgcolor:"#1b2029",
   font:{color:"#e6e9ef", size:12}, margin:{l:45,r:15,t:10,b:35} };
 const CFG = { displayModeBar:false, responsive:true };
 
+const CONTEXT_IDS = ["cpi_yoy", "core_cpi_yoy", "ppi_yoy", "payrolls_yoy", "unemployment", "job_openings", "fed_funds"];
+const CONTEXT_LABEL = { cpi_yoy:"CPI YoY", core_cpi_yoy:"Core CPI", ppi_yoy:"PPI YoY",
+  payrolls_yoy:"Payrolls YoY", unemployment:"Unemployment", job_openings:"Job openings", fed_funds:"Fed funds" };
+// Distinct line colors for the multi-indicator compare views, reusing hues already
+// established elsewhere in the palette (raw-line blue, froth-pct amber, cool green, bubble red).
+const COMPARE_PALETTE = ["#6ea8fe", "#e0b83c", "#4caf7d", "#d64545"];
+// Pinned indicator ids for the drill-down comparison, IN ADDITION to whatever the
+// <select> currently shows (the primary). See compareSet() for how these combine.
+// 0 extras = original single-indicator view; 1-3 = comparison view (2-4 total).
+let EXTRA_COMPARE = [];
+
 let LATEST, HISTORY, INDICATORS, EPISODES, WIN = "full";
 
 async function boot() {
   [LATEST, HISTORY, INDICATORS, EPISODES] = await Promise.all(
     ["latest", "history", "indicators", "episodes"].map(n => fetch(`data/${n}.json`).then(r => r.json())));
   document.getElementById("asof").textContent = `as of ${LATEST.as_of}`;
-  renderGauge(); renderPillars(); renderHistory(); initPicker();
+  renderGauge(); renderPillars(); renderHistory(); renderContextPanel(); initPicker();
   initHistoryTabs(); renderStress();
   renderAnalogs(); renderRadar(); renderAnalogTable();
   renderSequence();
@@ -145,6 +156,20 @@ function dateRange(dates) {
   return dates && dates.length ? { range: [dates[0], dates[dates.length - 1]] } : {};
 }
 
+// Same idea as dateRange(), but pinned to the UNION of several series' spans (used by
+// the multi-indicator compare views, whose selected indicators rarely share a start date
+// -- e.g. Shiller CAPE from 1881 alongside a FRED series from the 1950s).
+function unionDateRange(dateArrays) {
+  const arrs = dateArrays.filter(a => a && a.length);
+  if (!arrs.length) return {};
+  let start = arrs[0][0], end = arrs[0][arrs[0].length - 1];
+  for (const a of arrs) {
+    if (a[0] < start) start = a[0];
+    if (a[a.length - 1] > end) end = a[a.length - 1];
+  }
+  return { range: [start, end] };
+}
+
 function renderHistory() {
   const h = HISTORY[WIN];
   if (!h) return;
@@ -199,12 +224,65 @@ function initPicker() {
     o.textContent = `${PILLAR_LABEL[INDICATORS[id].pillar]} · ${INDICATORS[id].name}`;
     sel.appendChild(o);
   }
-  sel.addEventListener("change", () => renderIndicator(sel.value));
-  renderIndicator(ids[0]);
+  sel.addEventListener("change", () => renderIndicator());
+  document.getElementById("compare-add").addEventListener("click", () => pinCompare(sel.value));
+  renderIndicator();
 }
 
-function renderIndicator(id) {
-  const d = INDICATORS[id];
+// The compare set is DERIVED, not stored wholesale: slot 0 is always whatever the
+// <select> currently shows (so "changing the primary replaces the first chip" falls out
+// for free -- there's nothing to explicitly replace), and EXTRA_COMPARE holds the 0-3
+// pinned additional ids. If a pinned id happens to equal the current primary (e.g. right
+// after pinning it, before the user picks something else to compare it against) it's
+// filtered out of the effective set so it doesn't render as a visual duplicate.
+function compareSet() {
+  const primary = document.getElementById("indicator-picker").value;
+  return [primary, ...EXTRA_COMPARE.filter(id => id !== primary)];
+}
+
+// "+ Compare" pins the CURRENTLY SELECTED (primary) indicator so it survives the next
+// change to the <select> -- the natural way to build a 2nd/3rd/4th comparison member is:
+// pin the indicator you're looking at, then pick the next one in the dropdown.
+function pinCompare(id) {
+  if (!id || EXTRA_COMPARE.includes(id) || EXTRA_COMPARE.length >= 3) return;
+  EXTRA_COMPARE.push(id);
+  renderIndicator();
+}
+
+function unpinCompare(id) {
+  EXTRA_COMPARE = EXTRA_COMPARE.filter(x => x !== id);
+  renderIndicator();
+}
+
+// Shared entry point for both the picker <select> and the context-panel tiles. Setting
+// .value programmatically doesn't fire a native "change" event, so re-render explicitly.
+function selectPrimary(id, scrollIntoView) {
+  document.getElementById("indicator-picker").value = id;
+  renderIndicator();
+  if (scrollIntoView) {
+    document.getElementById("drilldown").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// Chip row shows only the PINNED extras (the primary is already visible via the select,
+// no need to duplicate it here) -- each removable with an x.
+function renderCompareChips(ids) {
+  const el = document.getElementById("compare-chips");
+  const extras = ids.slice(1);
+  el.innerHTML = extras.map(id => {
+    const name = INDICATORS[id] ? INDICATORS[id].name : id;
+    return `<span class="chip compare-chip">${name}<span class="chip-x" data-id="${id}">&times;</span></span>`;
+  }).join("");
+  el.querySelectorAll(".chip-x").forEach(x =>
+    x.addEventListener("click", () => unpinCompare(x.dataset.id)));
+  const sel = document.getElementById("indicator-picker");
+  document.getElementById("compare-add").disabled =
+    EXTRA_COMPARE.length >= 3 || EXTRA_COMPARE.includes(sel.value);
+}
+
+function renderIndicator() {
+  const ids = compareSet();
+  const d = INDICATORS[ids[0]];
   document.getElementById("indicator-meta").innerHTML =
     `<span class="chip">${d.role}</span><span class="chip">${d.direction}</span>` +
     `<span class="chip">${d.frequency}</span>` +
@@ -212,6 +290,19 @@ function renderIndicator(id) {
     `<span class="chip">z ${d.latest.zscore ?? "n/a"}</span>` +
     (d.stale ? ' <span class="badge-stale">STALE</span>' : "") +
     ` <span class="muted">last obs ${d.last_obs}</span>`;
+  renderCompareChips(ids);
+  if (ids.length <= 1) {
+    renderSingleIndicator(d);
+  } else {
+    renderComparePct(ids);
+    renderCompareRaw(ids);
+  }
+}
+
+// Exactly the pre-comparison-feature rendering: raw chart with S&P overlay + froth-pct
+// chart, both on their own single axis. Kept byte-for-byte in behavior so the 1-indicator
+// case has zero visual change.
+function renderSingleIndicator(d) {
   const rawTraces = [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }];
   if (HISTORY.spx) {
     rawTraces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
@@ -234,6 +325,119 @@ function renderIndicator(id) {
                                 line: { color: "#d64545", width: 1, dash: "dot" } })),
         ...crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
       ] }, CFG);
+}
+
+// 2-4 indicators: percentiles are the comparable scale (that's what froth normalization is
+// for), so they overlay on ONE shared 0-100 y-axis. Raw units differ per indicator, so raw
+// values are never overlaid -- see renderCompareRaw's small multiples instead.
+function renderComparePct(ids) {
+  const traces = ids.map((id, i) => {
+    const d = INDICATORS[id];
+    return { x: d.pct_series.dates, y: d.pct_series.values, name: d.name,
+              line: { color: COMPARE_PALETTE[i % COMPARE_PALETTE.length], width: 1.6 } };
+  });
+  traces.push(crisisLabels(97));
+  Plotly.newPlot("indicator-pct", traces,
+    { ...PLOT_BASE, height: 230, yaxis: { range: [0, 100] },
+      xaxis: unionDateRange(ids.map(id => INDICATORS[id].pct_series.dates)),
+      legend: { orientation: "h", y: -0.22 },
+      shapes: [
+        ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
+                                line: { color: "#d64545", width: 1, dash: "dot" } })),
+        ...crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
+      ] }, CFG);
+}
+
+// Small multiples: one stacked row per indicator, each with its OWN y-axis (raw units
+// aren't comparable across indicators the way percentiles are). All rows share one pinned
+// x-range (union of the selected series' spans) via identical explicit `range` on every
+// row's x-axis. crisisShapes() already emits yref:"paper" (0-1 spans the whole canvas
+// regardless of which row's x-axis positions it), so one shared shape list spans every row.
+function renderCompareRaw(ids) {
+  const n = ids.length;
+  const gap = 0.06;
+  const rowH = (1 - gap * (n - 1)) / n;
+  const xr = unionDateRange(ids.map(id => INDICATORS[id].series.dates));
+  const traces = [];
+  const layout = { ...PLOT_BASE, height: 140 * n + 40, showlegend: false,
+                   annotations: [], shapes: crisisShapes() };
+  ids.forEach((id, i) => {
+    const d = INDICATORS[id];
+    const top = 1 - i * (rowH + gap);
+    const bottom = top - rowH;
+    const suffix = i === 0 ? "" : String(i + 1);
+    traces.push({ x: d.series.dates, y: d.series.values, name: d.name,
+                  xaxis: "x" + suffix, yaxis: "y" + suffix,
+                  line: { color: COMPARE_PALETTE[i % COMPARE_PALETTE.length], width: 1.3 } });
+    layout["xaxis" + suffix] = { domain: [0, 1], anchor: "y" + suffix, range: xr.range,
+                                  showticklabels: i === n - 1, tickfont: { size: 9, color: "#8b93a3" } };
+    layout["yaxis" + suffix] = { domain: [bottom, top], anchor: "x" + suffix,
+                                  tickfont: { size: 9, color: "#8b93a3" } };
+    layout.annotations.push({ xref: "paper", yref: "paper", x: 0.01, y: top - 0.015,
+                              xanchor: "left", yanchor: "top", showarrow: false,
+                              text: d.name, font: { size: 10, color: "#8b93a3" } });
+  });
+  Plotly.newPlot("indicator-raw", traces, layout, CFG);
+}
+
+function fmtContextValue(id, v) {
+  if (v == null) return "n/a";
+  if (id === "job_openings") return Math.round(v).toLocaleString("en-US") + "k";
+  const dec = (id === "payrolls_yoy" || id === "fed_funds") ? 2 : 1;
+  return v.toFixed(dec) + "%";
+}
+
+function fmtContextDelta(id, delta) {
+  if (delta == null) return "";
+  const dec = id === "job_openings" ? 0 : (id === "payrolls_yoy" || id === "fed_funds" ? 2 : 1);
+  const up = delta > 0.0005, down = delta < -0.0005;
+  const arrow = up ? "▲" : down ? "▼" : "–";
+  const sign = up ? "+" : down ? "-" : "";
+  const suffix = id === "job_openings" ? "k" : "pp";
+  const mag = id === "job_openings"
+    ? Math.round(Math.abs(delta)).toLocaleString("en-US")
+    : Math.abs(delta).toFixed(dec);
+  return `${arrow} ${sign}${mag}${suffix}`;
+}
+
+// Nearest observation to `targetTime` in a (date, value) series pair -- used to find the
+// value ~12 months before the latest observation without assuming exact day alignment
+// (monthly series don't all publish on the same day-of-month).
+function valueNearDate(dates, values, targetTime) {
+  let bestIdx = -1, bestDiff = Infinity;
+  for (let i = 0; i < dates.length; i++) {
+    const diff = Math.abs(new Date(dates[i]).getTime() - targetTime);
+    if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+  }
+  return bestIdx >= 0 ? values[bestIdx] : null;
+}
+
+function renderContextPanel() {
+  const el = document.getElementById("context-tiles");
+  el.innerHTML = "";
+  for (const id of CONTEXT_IDS) {
+    const d = INDICATORS[id];
+    if (!d) continue;
+    const dates = d.series.dates, vals = d.series.values;
+    const latestVal = d.latest.value;
+    let priorVal = null;
+    if (dates.length) {
+      const targetTime = new Date(dates[dates.length - 1]).getTime() - 365 * 86400000;
+      priorVal = valueNearDate(dates, vals, targetTime);
+    }
+    const delta = (latestVal != null && priorVal != null) ? latestVal - priorVal : null;
+    const pct = d.latest.pct_full;
+    const tile = document.createElement("div");
+    tile.className = "context-tile";
+    tile.title = "vs ~12 months earlier" + (priorVal != null ? `: ${fmtContextValue(id, priorVal)}` : "");
+    tile.innerHTML =
+      `<div class="context-label">${CONTEXT_LABEL[id]}</div>` +
+      `<div class="context-value">${fmtContextValue(id, latestVal)}</div>` +
+      `<div class="context-delta">${fmtContextDelta(id, delta)}</div>` +
+      `<span class="chip">pct ${pct != null ? Math.round(pct) : "n/a"}</span>`;
+    tile.addEventListener("click", () => selectPrimary(id, true));
+    el.appendChild(tile);
+  }
 }
 
 function renderSequence() {
