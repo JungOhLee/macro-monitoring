@@ -19,6 +19,7 @@ sequencer:
   engaged_min_stages: 2        # of stages 1-3 fired (not lapsed)
   lapse_days: 92               # stage un-fires after condition false this long
   reset_drawdown_pct: 20       # index falls 20% below its post-engagement high -> reset to not engaged
+  credit_path: true            # also engage when stage 3 AND stage 4 are concurrently raw-true (credit-led bears, e.g. 1990)
   stages:
     "1": {rule: pillar_above, pillar: valuation, level: 80, min_days: 126}
     "2": {rule: froth_rollover, indicator: margin_debt_yoy, level: 85, lookback_days: 365, decline_obs: 2}

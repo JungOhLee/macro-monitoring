@@ -8,6 +8,10 @@ from pipeline import paths
 
 STAGE_IDS = (1, 2, 3, 4, 5, 6)
 
+RECENT_OBS_DAYS = 21     # "within the past month" per design §8b -- ~1 trading month of observations
+SAHM_MAX_AGE_DAYS = 75   # Sahm real-time updates ~monthly; beyond this the reading is stale -> not-hot
+VIX_MAX_AGE_DAYS = 10    # VIX should refresh ~daily; beyond this the reading is stale -> not-hot
+
 
 def _win(s: pd.Series, asof: pd.Timestamp, days: int) -> pd.Series:
     s = s[s.index <= asof]
@@ -57,7 +61,20 @@ def _stage_spread_widening(cfg, raw: dict, asof) -> bool | None:
     w = _win(s, asof, cfg["low_lookback_days"])
     if w.empty:
         return None
-    return bool(w.iloc[-1] >= w.min() + cfg["widen"])
+    # Intra-window, order-aware: fire if at ANY point in the window the series has
+    # widened >= `widen` off its running (cumulative) minimum-to-date -- a trough
+    # followed by a later spike -- evaluated across all observations in the window,
+    # not just the final one. Forensic basis: GFC's Baa-10Y spread crossed +60bp off
+    # its trailing low intra-month on 2007-09-10/11, then narrowed back before the
+    # month-end snapshot; a last-value-vs-window-min check misses that graze entirely.
+    # Ordering matters, not just range: a value preceding the window's eventual low
+    # does not count, since `cummin` only reflects the minimum seen so far.
+    # 1e-9 epsilon guards the boundary against float subtraction noise (e.g. the
+    # real 2007-09-11 GFC graze is 2.13 - 1.53, exactly +0.60 in the source data,
+    # but represents as 0.5999999999999999 in IEEE-754 float64) -- same pattern
+    # already used for the breadth-divergence low-tie check below.
+    m = w.cummin()
+    return bool(((w - m) >= cfg["widen"] - 1e-9).any())
 
 
 def _stage_breadth_divergence(cfg, raw: dict, breadth_raw: pd.Series | None, asof) -> bool | None:
@@ -68,7 +85,11 @@ def _stage_breadth_divergence(cfg, raw: dict, breadth_raw: pd.Series | None, aso
     b = _win(breadth_raw, asof, cfg["breadth_low_days"])
     if w.empty or b.empty:
         return None
-    near_high = w.iloc[-1] >= w.max() * (1 - cfg["near_high_pct"] / 100.0)
+    # design §8b: "within 2% of 52-week high in past month" -- test the past
+    # RECENT_OBS_DAYS observations against the lookback max, not just the asof close,
+    # so a pullback into the final observation doesn't erase a real divergence.
+    recent = w.tail(RECENT_OBS_DAYS)
+    near_high = bool((recent >= w.max() * (1 - cfg["near_high_pct"] / 100.0)).any())
     breadth_at_low = b.iloc[-1] <= b.min() + 1e-9
     return bool(near_high and breadth_at_low)
 
@@ -79,12 +100,23 @@ def _stage_price_confirmation(cfg, raw: dict, asof) -> bool | None:
         return None
     upto = idx_s[idx_s.index <= asof]
     below_dma = upto.iloc[-1] < upto.rolling(cfg["dma_days"]).mean().iloc[-1]
-    sahm = raw.get(cfg["sahm_series"])
-    vix = raw.get(cfg["vix_series"])
-    sahm_hot = (sahm is not None and not sahm[sahm.index <= asof].empty
-                and sahm[sahm.index <= asof].iloc[-1] >= cfg["sahm_level"])
-    vix_hot = (vix is not None and not vix[vix.index <= asof].empty
-               and vix[vix.index <= asof].iloc[-1] >= cfg["vix_level"])
+
+    def _fresh_and_hot(s: pd.Series | None, level: float, max_age_days: int) -> bool:
+        # Staleness bound: an input older than its max age at asof carries no current
+        # signal -- treated as not-hot (not as missing/None), so a stalled Sahm or VIX
+        # feed can't silently keep confirming a stage-6 "hot" condition indefinitely.
+        if s is None:
+            return False
+        s = s[s.index <= asof]
+        if s.empty:
+            return False
+        age_days = (asof - s.index[-1]).days
+        if age_days > max_age_days:
+            return False
+        return bool(s.iloc[-1] >= level)
+
+    sahm_hot = _fresh_and_hot(raw.get(cfg["sahm_series"]), cfg["sahm_level"], SAHM_MAX_AGE_DAYS)
+    vix_hot = _fresh_and_hot(raw.get(cfg["vix_series"]), cfg["vix_level"], VIX_MAX_AGE_DAYS)
     return bool(below_dma and (sahm_hot or vix_hot))
 
 
@@ -141,7 +173,17 @@ def update_state(prev: dict, fired: dict[int, bool | None], asof: pd.Timestamp,
     active = [n for n in STAGE_IDS
               if state["stages"][str(n)]["fired"] is True and not state["stages"][str(n)]["lapsed"]]
     early = [n for n in active if n <= 3]
-    state["engaged"] = len(early) >= cfg["engaged_min_stages"]
+    # Credit path (design §8a/8b amendment, 2026-07-06): credit-led bears can satisfy
+    # stage 3 (curve resteepen) AND stage 4 (credit spread widening) without ever
+    # tripping the "2 of stages 1-3" gate. Requires stages 3 and 4 to be CONCURRENTLY
+    # raw-true at the same checkpoint (the `fired` dict), not merely fired-and-not-lapsed
+    # state -- 1990 evidence: concurrent Jan-Apr 1990 (stage 4 live since May 1989).
+    # Un-lapsed *residual* state was rejected as the trigger: it let the Q4-2018 spread
+    # widening's residue (exactly-92-day gap vs. the >92 lapse rule) combine with the
+    # one-month Dec-2019 curve resteepen to falsely engage. Consequence: credit-path
+    # engagement persists only while both conditions stay live, not merely un-lapsed.
+    credit_engaged = bool(cfg.get("credit_path")) and fired.get(3) is True and fired.get(4) is True
+    state["engaged"] = (len(early) >= cfg["engaged_min_stages"]) or credit_engaged
     state["current_stage"] = max(active) if state["engaged"] and active else 0
     # reset: crisis realized (drawdown from 12m high beyond threshold)
     if state["engaged"] and spx is not None and not spx.empty:
