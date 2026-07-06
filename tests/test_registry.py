@@ -4,7 +4,7 @@ from pipeline.registry import load_registry, load_thresholds
 
 def test_registry_loads_and_counts():
     reg = load_registry()
-    assert len(reg.series) == 23
+    assert len(reg.series) == 24
     assert len(reg.indicators) == 18
     assert abs(sum(reg.pillar_weights.values()) - 1.0) < 1e-9
     assert set(reg.pillar_weights) == {"valuation", "leverage", "liquidity", "sentiment", "macro"}

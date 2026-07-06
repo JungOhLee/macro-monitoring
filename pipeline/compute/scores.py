@@ -97,7 +97,7 @@ def compute_scores(
         for dt, val in comp.items():
             comp_rows.append({"date": dt, "window": window, "score": round(float(val), 2),
                               "regime": regime_for(float(val), bands)})
-        stacked = pillar_df.stack().reset_index()
+        stacked = pillar_df.stack().dropna().reset_index()
         stacked.columns = ["date", "pillar", "score"]
         for r in stacked.itertuples(index=False):
             pillar_rows.append({"date": r.date, "window": window, "pillar": r.pillar,
