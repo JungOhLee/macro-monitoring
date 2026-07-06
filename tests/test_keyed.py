@@ -5,6 +5,15 @@ import requests
 from pipeline.ingest import keyed
 
 
+@pytest.fixture(autouse=True)
+def _reset_throttle_state(monkeypatch):
+    # Every test starts with a clean throttle clock so that _get_json's
+    # unconditional _throttle() call never triggers a real time.sleep just
+    # because an earlier test in this run happened to touch the module-level
+    # _last_request_time within the last 1.5s.
+    monkeypatch.setattr(keyed, "_last_request_time", None)
+
+
 class FakeResp:
     def __init__(self, payload, status=200):
         self._payload = payload
@@ -164,6 +173,35 @@ def test_note_payload_never_leaks_key_even_if_echoed(monkeypatch):
     assert "SNEAKYKEY123" not in msg
     assert "***" in msg
     assert "has been used too many times" in msg
+
+
+def test_throttle_first_call_does_not_sleep(monkeypatch):
+    monkeypatch.setattr(keyed, "_last_request_time", None)
+    monkeypatch.setattr(keyed.time, "monotonic", lambda: 100.0)
+    sleeps = []
+    monkeypatch.setattr(keyed.time, "sleep", lambda secs: sleeps.append(secs))
+    keyed._throttle()
+    assert sleeps == []
+    assert keyed._last_request_time == 100.0
+
+
+def test_throttle_immediate_second_call_sleeps_remaining_interval(monkeypatch):
+    monkeypatch.setattr(keyed, "_last_request_time", 100.0)
+    monkeypatch.setattr(keyed.time, "monotonic", lambda: 100.0)
+    sleeps = []
+    monkeypatch.setattr(keyed.time, "sleep", lambda secs: sleeps.append(secs))
+    keyed._throttle()
+    assert sleeps == [pytest.approx(1.5)]
+
+
+def test_throttle_call_after_interval_elapsed_does_not_sleep(monkeypatch):
+    monkeypatch.setattr(keyed, "_last_request_time", 100.0)
+    monkeypatch.setattr(keyed.time, "monotonic", lambda: 102.0)
+    sleeps = []
+    monkeypatch.setattr(keyed.time, "sleep", lambda secs: sleeps.append(secs))
+    keyed._throttle()
+    assert sleeps == []
+    assert keyed._last_request_time == 102.0
 
 
 def test_soft_failure_excerpt_is_truncated(monkeypatch):

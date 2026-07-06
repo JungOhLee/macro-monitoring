@@ -1,9 +1,30 @@
 from __future__ import annotations
 
+import time
+
 import pandas as pd
 import requests
 
 API_URL = "https://www.alphavantage.co/query"
+
+# Alpha Vantage's free tier enforces roughly 1 request/second: back-to-back
+# keyed requests (RSP, SPY, BTC in run_ingest) otherwise get a 200-with-body
+# "Information" rate-limit response on all but the first (CI run 28816796515,
+# observed 2026-07-06). _MIN_REQUEST_INTERVAL paces our own requests so we
+# never trip that limit in the first place.
+_MIN_REQUEST_INTERVAL = 1.5
+_last_request_time = None
+
+
+def _throttle() -> None:
+    global _last_request_time
+    now = time.monotonic()
+    if _last_request_time is not None:
+        remaining = _MIN_REQUEST_INTERVAL - (now - _last_request_time)
+        if remaining > 0:
+            time.sleep(remaining)
+    _last_request_time = now
+
 
 # Alpha Vantage symbols that use the digital-currency endpoint; everything else
 # is treated as an equity/ETF symbol on TIME_SERIES_DAILY (see _fetch_equity).
@@ -34,6 +55,7 @@ def _get_json(params: dict, series: str, api_key: str) -> dict:
     exception chaining), and we only ever quote our own static labels plus a
     key-scrubbed excerpt of soft-failure message bodies, never the raw
     response body or the raw exception message."""
+    _throttle()
     failure = None
     resp = None
     try:
