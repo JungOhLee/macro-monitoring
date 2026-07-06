@@ -16,6 +16,7 @@ const HISTORY_TABS = [
   { key: "stress", label: "Confirmation stress" },
 ];
 let HTAB = "composite";
+const STAGE_NAMES = ["Valuation", "Leverage peak", "Curve turn", "Credit widen", "Breadth break", "Confirmed"];
 const PLOT_BASE = { paper_bgcolor:"#1b2029", plot_bgcolor:"#1b2029",
   font:{color:"#e6e9ef", size:12}, margin:{l:45,r:15,t:10,b:35} };
 const CFG = { displayModeBar:false, responsive:true };
@@ -29,6 +30,7 @@ async function boot() {
   renderGauge(); renderPillars(); renderHistory(); initPicker();
   initHistoryTabs(); renderStress();
   renderAnalogs(); renderRadar(); renderAnalogTable();
+  renderSequence();
   document.getElementById("window-toggle").addEventListener("change", e => {
     WIN = e.target.checked ? "rolling20y" : "full";
     renderGauge(); renderPillars(); renderHistory(); renderStress();
@@ -175,6 +177,25 @@ function renderIndicator(id) {
                                 line: { color: "#d64545", width: 1, dash: "dot" } })),
         ...episodeShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
       ] }, CFG);
+}
+
+function renderSequence() {
+  const s = LATEST.sequence;
+  const banner = document.getElementById("sequence-banner");
+  const track = document.getElementById("sequence-track");
+  if (!s) { banner.textContent = "Available after first scheduled run."; return; }
+  banner.innerHTML = s.engaged
+    ? `<span style="color:var(--frothy)">Sequence engaged</span> — current stage ${s.current_stage}`
+    : "Sequence not engaged — no pre-crisis pattern in progress.";
+  track.innerHTML = STAGE_NAMES.map((name, i) => {
+    const st = s.stages[String(i + 1)] || {};
+    let cls = "stage";
+    if (st.fired === true && !st.lapsed) cls += " fired";
+    else if (st.lapsed) cls += " lapsed";
+    else if (st.fired === null) cls += " nodata";
+    const sub = st.fired === true ? (st.fired_date || "") : st.fired === null ? "no data" : "";
+    return `<div class="${cls}">${i + 1}. ${name}<br><span class="muted">${sub}</span></div>`;
+  }).join("");
 }
 
 let SEL_ANALOG = 0;

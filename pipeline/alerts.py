@@ -57,6 +57,18 @@ def evaluate_alerts(reg: Registry, thresholds: dict, now: pd.Timestamp) -> list[
                     f"The **{pillar}** pillar score crossed above {level}: {prev} -> {cur}.",
                 ))
 
+    from pipeline.compute.sequencer import load_state
+    seq_state = load_state()
+    if seq_state.get("as_of"):
+        for n_str, st in seq_state["stages"].items():
+            if st.get("fired") is True and st.get("fired_date") == seq_state["as_of"] and not st.get("lapsed"):
+                out.append(Alert(
+                    f"alert:stage-{n_str}",
+                    f"Sequence stage {n_str} fired",
+                    f"Pre-crisis sequence stage {n_str} fired on {seq_state['as_of']}. "
+                    f"Engaged: {seq_state['engaged']}, current stage: {seq_state['current_stage']}.",
+                ))
+
     freshness = store.load_freshness()
     stale = stale_series(reg, freshness, now)
     total = len(freshness)

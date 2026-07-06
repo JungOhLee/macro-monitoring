@@ -35,6 +35,15 @@ def cmd_run(args: argparse.Namespace) -> int:
     latest = result.composite[result.composite.window == "full"].iloc[-1]
     print(f"scores: +{n_comp} composite rows, +{n_pil} pillar rows, +{n_stress} stress rows; "
           f"latest {latest['date']:%Y-%m-%d} composite={latest['score']} ({latest['regime']})")
+
+    from pipeline.compute.sequencer import evaluate_stages, load_state, save_state, update_state
+
+    th = load_thresholds()
+    asof = max(s.index.max() for s in raw.values() if not s.empty)
+    fired = evaluate_stages(reg, th, raw, result, asof)
+    seq_state = update_state(load_state(), fired, asof, raw.get("spx"), th["sequencer"])
+    save_state(seq_state)
+    print(f"sequencer: engaged={seq_state['engaged']} current_stage={seq_state['current_stage']}")
     return 0
 
 

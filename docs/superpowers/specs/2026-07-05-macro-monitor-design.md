@@ -169,6 +169,8 @@ Stages evaluate independently every run and may fire in any order; **current sta
 | 5 Breadth breakdown | Index within 2% of 52-week high in past month while RSP/SPY breadth ratio sits at a 6-month low (divergence proxy — see §2b substitution) |
 | 6 Price confirmation | Index closes < 200-DMA AND (Sahm gap ≥ 0.50 OR VIX ≥ 30) |
 
+**Implementation note (2026-07-06):** stage 4 uses Moody's Baa−10Y (+60 bp off its 12-month low) instead of HY OAS +100 bp — FRED's HY series lacks pre-2023 history (license); revisit when a deep HY source exists.
+
 ### 8c. Alert rules & label taxonomy
 - `alert:regime` — composite regime band changes (full-history window).
 - `alert:pillar-<name>` — a pillar's **score value crosses above 90** (scores are already percentile-scaled 0–100; this is a value test, not a percentile-of-scores test). One label per pillar so pillars don't suppress each other.

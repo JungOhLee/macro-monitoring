@@ -16,3 +16,15 @@ stress_bands:   # confirmation-indicator gauge; ascending upper bounds
   - {name: quiet,      upper: 40}
   - {name: elevated,   upper: 70}
   - {name: confirming, upper: 100}
+
+sequencer:
+  engaged_min_stages: 2        # of stages 1-3 fired (not lapsed)
+  lapse_days: 92               # stage un-fires after condition false this long
+  reset_drawdown_pct: 20       # index falls 20% below its post-engagement high -> reset to not engaged
+  stages:
+    "1": {rule: pillar_above, pillar: valuation, level: 80, min_days: 126}
+    "2": {rule: froth_rollover, indicator: margin_debt_yoy, level: 85, lookback_days: 365, decline_obs: 2}
+    "3": {rule: curve_resteepen, series: t10y3m, lookback_days: 548, min_inverted_days: 21, resteepen_level: 0.25}
+    "4": {rule: spread_widening, series: baa10y, low_lookback_days: 365, widen: 0.60}
+    "5": {rule: breadth_divergence, index: spx, breadth: rsp_spy_breadth, near_high_pct: 2.0, high_lookback_days: 365, breadth_low_days: 126}
+    "6": {rule: price_confirmation, index: spx, dma_days: 200, sahm_series: sahmrealtime, sahm_level: 0.5, vix_series: vixcls, vix_level: 30}

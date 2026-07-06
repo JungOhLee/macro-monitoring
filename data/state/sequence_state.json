@@ -1,0 +1,43 @@
+{
+ "as_of": "2026-07-06",
+ "engaged": true,
+ "current_stage": 3,
+ "stages": {
+  "1": {
+   "fired": true,
+   "fired_date": "2026-07-06",
+   "lapsed": false,
+   "last_true": "2026-07-06"
+  },
+  "2": {
+   "fired": false,
+   "fired_date": null,
+   "lapsed": false,
+   "last_true": null
+  },
+  "3": {
+   "fired": true,
+   "fired_date": "2026-07-06",
+   "lapsed": false,
+   "last_true": "2026-07-06"
+  },
+  "4": {
+   "fired": false,
+   "fired_date": null,
+   "lapsed": false,
+   "last_true": null
+  },
+  "5": {
+   "fired": false,
+   "fired_date": null,
+   "lapsed": false,
+   "last_true": null
+  },
+  "6": {
+   "fired": false,
+   "fired_date": null,
+   "lapsed": false,
+   "last_true": null
+  }
+ }
+}

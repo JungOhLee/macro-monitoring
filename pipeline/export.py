@@ -41,6 +41,7 @@ def _atomic_write(fp, obj) -> None:
 def export_site(reg: Registry, thresholds: dict) -> dict:
     from pipeline.compute.analogs import top_analogs
     from pipeline.compute.episodes import firing_timeline, load_snapshots, pillar_scores_from_snapshots
+    from pipeline.compute.sequencer import load_state
     from pipeline.registry import load_episodes
 
     raw = {s.id: store.read_series(s.id) for s in reg.series}
@@ -120,7 +121,7 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
         "stress": stress,
         "pillars": pillars,
         "analogs": analogs_payload,
-        "sequence": None,
+        "sequence": load_state() if (paths.DATA_STATE / "sequence_state.json").exists() else None,
         "freshness": {
             s.id: {"last_obs": (raw[s.id].index.max().strftime("%Y-%m-%d") if not raw[s.id].empty else None),
                     "stale": s.id in stale}
