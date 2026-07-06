@@ -2,151 +2,151 @@
  "baa10y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:37+00:00",
+  "last_fetch": "2026-07-06T14:24:19+00:00",
   "last_obs": "2026-07-01"
  },
  "bamlh0a0hym2": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:37+00:00",
+  "last_fetch": "2026-07-06T14:24:19+00:00",
   "last_obs": "2026-07-02"
  },
  "bcnsdodns": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:34+00:00",
+  "last_fetch": "2026-07-06T14:24:17+00:00",
   "last_obs": "2026-01-01"
  },
  "btcusd": {
   "error": "RuntimeError: Yahoo HTTP 429 for BTC-USD",
   "fetch_ok": false,
-  "last_fetch": "2026-07-06T13:15:40+00:00",
+  "last_fetch": "2026-07-06T14:24:23+00:00",
   "last_obs": "2026-07-06"
  },
  "cfnai": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:39+00:00",
+  "last_fetch": "2026-07-06T14:24:22+00:00",
   "last_obs": "2026-05-01"
  },
  "cmdebt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:34+00:00",
+  "last_fetch": "2026-07-06T14:24:16+00:00",
   "last_obs": "2026-01-01"
  },
  "cpilfesl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:37+00:00",
+  "last_fetch": "2026-07-06T14:24:19+00:00",
   "last_obs": "2026-05-01"
  },
  "drtscilm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:34+00:00",
+  "last_fetch": "2026-07-06T14:24:17+00:00",
   "last_obs": "2026-04-01"
  },
  "dtwexbgs": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:38+00:00",
+  "last_fetch": "2026-07-06T14:24:21+00:00",
   "last_obs": "2026-06-26"
  },
  "dtwexm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:39+00:00",
+  "last_fetch": "2026-07-06T14:24:22+00:00",
   "last_obs": "2019-12-31"
  },
  "fedfunds": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:36+00:00",
+  "last_fetch": "2026-07-06T14:24:19+00:00",
   "last_obs": "2026-06-01"
  },
  "gdp": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:34+00:00",
+  "last_fetch": "2026-07-06T14:24:16+00:00",
   "last_obs": "2026-01-01"
  },
  "m2sl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:35+00:00",
+  "last_fetch": "2026-07-06T14:24:17+00:00",
   "last_obs": "2026-05-01"
  },
  "margin_debt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:40+00:00",
+  "last_fetch": "2026-07-06T14:24:23+00:00",
   "last_obs": "2026-05-01"
  },
  "ncbeilq027s": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:33+00:00",
+  "last_fetch": "2026-07-06T14:24:15+00:00",
   "last_obs": "2026-01-01"
  },
  "rrpontsyd": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:36+00:00",
+  "last_fetch": "2026-07-06T14:24:18+00:00",
   "last_obs": "2026-07-02"
  },
  "rsp": {
   "error": "RuntimeError: Yahoo HTTP 429 for RSP",
   "fetch_ok": false,
-  "last_fetch": "2026-07-06T13:15:40+00:00",
+  "last_fetch": "2026-07-06T14:24:23+00:00",
   "last_obs": "2026-07-02"
  },
  "sahmrealtime": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:39+00:00",
+  "last_fetch": "2026-07-06T14:24:22+00:00",
   "last_obs": "2026-06-01"
  },
  "spx": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:40+00:00",
+  "last_fetch": "2026-07-06T14:24:23+00:00",
   "last_obs": "2026-07-02"
  },
  "spy": {
   "error": "RuntimeError: Yahoo HTTP 429 for SPY",
   "fetch_ok": false,
-  "last_fetch": "2026-07-06T13:15:40+00:00",
+  "last_fetch": "2026-07-06T14:24:23+00:00",
   "last_obs": "2026-07-02"
  },
  "t10y2y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:37+00:00",
+  "last_fetch": "2026-07-06T14:24:20+00:00",
   "last_obs": "2026-07-02"
  },
  "t10y3m": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:38+00:00",
+  "last_fetch": "2026-07-06T14:24:20+00:00",
   "last_obs": "2026-07-02"
  },
  "vixcls": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:38+00:00",
-  "last_obs": "2026-07-01"
+  "last_fetch": "2026-07-06T14:24:21+00:00",
+  "last_obs": "2026-07-03"
  },
  "walcl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:35+00:00",
+  "last_fetch": "2026-07-06T14:24:18+00:00",
   "last_obs": "2026-07-01"
  },
  "wtregen": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-06T13:15:36+00:00",
+  "last_fetch": "2026-07-06T14:24:18+00:00",
   "last_obs": "2026-07-01"
  }
 }
