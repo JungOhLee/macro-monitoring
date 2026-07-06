@@ -204,6 +204,35 @@ def test_throttle_call_after_interval_elapsed_does_not_sleep(monkeypatch):
     assert keyed._last_request_time == 102.0
 
 
+def test_throttle_three_calls_keep_each_gap_at_min_interval(monkeypatch):
+    """Regression for a real bug: _last_request_time must be recorded as the
+    post-sleep (actual dispatch) time. Recording the pre-sleep timestamp
+    instead anchors the NEXT call's elapsed-time math too early, letting
+    back-to-back dispatches land under _MIN_REQUEST_INTERVAL apart -- exactly
+    what let AV's rate limiter still trip on the third (BTC) call in the
+    RSP -> SPY -> BTC sequence despite pacing being "on"."""
+    clock = {"t": 0.0}
+    monkeypatch.setattr(keyed, "_last_request_time", None)
+    monkeypatch.setattr(keyed.time, "monotonic", lambda: clock["t"])
+
+    def fake_sleep(secs):
+        clock["t"] += secs
+
+    monkeypatch.setattr(keyed.time, "sleep", fake_sleep)
+
+    keyed._throttle()  # RSP-equivalent: t=0.0, no previous call -> no sleep
+    assert keyed._last_request_time == pytest.approx(0.0)
+
+    clock["t"] = 0.3  # simulated network latency before the next call
+    keyed._throttle()  # SPY-equivalent: elapsed 0.3s -> sleeps 1.2s to reach t=1.5
+    assert keyed._last_request_time == pytest.approx(1.5)
+
+    clock["t"] += 0.3  # more simulated network latency (t=1.8)
+    keyed._throttle()  # BTC-equivalent: gap since the actual SPY dispatch is
+    # only 0.3s, so this must sleep the remaining ~1.2s to hold the 1.5s floor
+    assert keyed._last_request_time == pytest.approx(3.0)
+
+
 def test_soft_failure_excerpt_is_truncated(monkeypatch):
     """A message longer than 200 chars is truncated so we never embed an
     unbounded response body in a raised label."""

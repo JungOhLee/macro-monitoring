@@ -23,6 +23,13 @@ def _throttle() -> None:
         remaining = _MIN_REQUEST_INTERVAL - (now - _last_request_time)
         if remaining > 0:
             time.sleep(remaining)
+            # Re-read the clock: _last_request_time must reflect the actual
+            # post-sleep dispatch time, not the pre-sleep timestamp -- else
+            # the next call's elapsed-time math is anchored to a stale
+            # instant and silently permits back-to-back dispatches under
+            # _MIN_REQUEST_INTERVAL apart (this shrank the RSP->SPY->BTC
+            # gaps below 1.5s in practice and still tripped AV's limiter).
+            now = time.monotonic()
     _last_request_time = now
 
 
