@@ -61,8 +61,9 @@ def test_deliver_local_prints_not_calls_gh(env, monkeypatch, capsys):
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     called = []
     monkeypatch.setattr(alerts.subprocess, "run", lambda *a, **k: called.append(a))
-    alerts.deliver([alerts.Alert("alert:regime", "t", "b")], 7)
+    result = alerts.deliver([alerts.Alert("alert:regime", "t", "b")], 7)
     assert called == []
+    assert result == 0
     assert "alert:regime" in capsys.readouterr().out
 
 
@@ -71,9 +72,10 @@ def test_deliver_ci_respects_cooldown(env, monkeypatch):
     calls = []
 
     class R:
-        def __init__(self, out):
+        def __init__(self, out, returncode=0, stderr=""):
             self.stdout = out
-            self.returncode = 0
+            self.returncode = returncode
+            self.stderr = stderr
 
     def fake_run(cmd, capture_output=True, text=True, check=False):
         calls.append(cmd)
@@ -83,8 +85,57 @@ def test_deliver_ci_respects_cooldown(env, monkeypatch):
         return R("")
 
     monkeypatch.setattr(alerts.subprocess, "run", fake_run)
-    alerts.deliver([alerts.Alert("alert:regime", "t1", "b1"),
+    result = alerts.deliver([alerts.Alert("alert:regime", "t1", "b1"),
                     alerts.Alert("alert:pillar-valuation", "t2", "b2")], 7)
+    assert result == 0
     creates = [c for c in calls if "create" in c]
     assert len(creates) == 1
     assert "alert:pillar-valuation" in " ".join(creates[0])
+
+
+def test_deliver_ci_fail_closed_on_list_error(env, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    calls = []
+
+    class R:
+        def __init__(self, out, returncode=0, stderr=""):
+            self.stdout = out
+            self.returncode = returncode
+            self.stderr = stderr
+
+    def fake_run(cmd, capture_output=True, text=True, check=False):
+        calls.append(cmd)
+        if "list" in cmd:
+            return R("", returncode=1, stderr="error")
+        return R("")
+
+    monkeypatch.setattr(alerts.subprocess, "run", fake_run)
+    result = alerts.deliver([alerts.Alert("alert:regime", "t", "b")], 7)
+    assert result == 0
+    creates = [c for c in calls if "create" in c]
+    assert len(creates) == 0
+    assert "fail-closed" in capsys.readouterr().out
+
+
+def test_deliver_ci_reports_create_failure(env, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    calls = []
+
+    class R:
+        def __init__(self, out, returncode=0, stderr=""):
+            self.stdout = out
+            self.returncode = returncode
+            self.stderr = stderr
+
+    def fake_run(cmd, capture_output=True, text=True, check=False):
+        calls.append(cmd)
+        if "list" in cmd:
+            return R("[]", returncode=0)
+        if "create" in cmd:
+            return R("", returncode=1, stderr="boom")
+        return R("")
+
+    monkeypatch.setattr(alerts.subprocess, "run", fake_run)
+    result = alerts.deliver([alerts.Alert("alert:regime", "t", "b")], 7)
+    assert result == 1
+    assert "FAILED" in capsys.readouterr().out

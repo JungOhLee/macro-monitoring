@@ -65,15 +65,15 @@ def cmd_alerts(args: argparse.Namespace) -> int:
 
     th = load_thresholds()
     if args.test:
-        deliver([Alert("data-health", "Test alert - please ignore",
+        failed = deliver([Alert("data-health", "Test alert - please ignore",
                        "Verifying the alert email path. Close me.")], cooldown_days=0)
-        return 0
+        return 1 if failed else 0
     reg = load_registry()
     now = pd.Timestamp.utcnow().tz_localize(None).normalize()
     found = evaluate_alerts(reg, th, now)
-    deliver(found, th["alerts"]["cooldown_days"])
+    failed = deliver(found, th["alerts"]["cooldown_days"])
     print(f"alerts: {len(found)} rule(s) fired")
-    return 0
+    return 1 if failed else 0
 
 
 def cmd_export(args: argparse.Namespace) -> int:

@@ -67,9 +67,10 @@ def evaluate_alerts(reg: Registry, thresholds: dict, now: pd.Timestamp) -> list[
     return out
 
 
-def deliver(alerts: list[Alert], cooldown_days: int) -> None:
+def deliver(alerts: list[Alert], cooldown_days: int) -> int:
     in_ci = bool(os.environ.get("GITHUB_ACTIONS"))
     since = (pd.Timestamp.utcnow().tz_localize(None) - pd.Timedelta(days=cooldown_days)).strftime("%Y-%m-%d")
+    failed = 0
     for a in alerts:
         if not in_ci:
             print(f"[alert] {a.label}: {a.title}\n        {a.body}")
@@ -79,15 +80,25 @@ def deliver(alerts: list[Alert], cooldown_days: int) -> None:
              "--search", f"created:>={since}", "--json", "number"],
             capture_output=True, text=True, check=False,
         )
+        # Fail-closed: if list fails or JSON parse fails, skip create
+        if listed.returncode != 0:
+            print(f"[alert] cooldown check failed for {a.label}, skipping create (fail-closed)")
+            continue
         try:
             recent = json.loads(listed.stdout or "[]")
         except json.JSONDecodeError:
-            recent = []
+            print(f"[alert] cooldown check failed for {a.label}, skipping create (fail-closed)")
+            continue
         if recent:
             print(f"[alert] cooldown active for {a.label}, skipping")
             continue
-        subprocess.run(
+        result = subprocess.run(
             ["gh", "issue", "create", "--title", a.title, "--body", a.body, "--label", a.label],
             capture_output=True, text=True, check=False,
         )
-        print(f"[alert] issue created: {a.label}: {a.title}")
+        if result.returncode != 0:
+            print(f"[alert] FAILED to create issue for {a.label}: {result.stderr.strip()[:200]}")
+            failed += 1
+        else:
+            print(f"[alert] issue created: {a.label}: {a.title}")
+    return failed if in_ci else 0
