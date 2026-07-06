@@ -12,32 +12,39 @@ BANDS = [
     {"name": "frothy", "upper": 85},
     {"name": "bubble_risk", "upper": 100},
 ]
-TH = {"regime_bands": BANDS, "score_start": "2011-01-01", "alerts": {"pillar_extreme_level": 90, "cooldown_days": 7}}
+TH = {"regime_bands": BANDS, "score_start": "2011-01-01", "alerts": {"pillar_extreme_level": 90, "cooldown_days": 7},
+      "stress_bands": [{"name": "quiet", "upper": 40}, {"name": "elevated", "upper": 70},
+                        {"name": "confirming", "upper": 100}]}
 
 
-def make_reg():
-    return Registry(
-        series=[
-            Series("up", "fred", "UP", "monthly", 45, 0, 1),
-            Series("down", "fred", "DOWN", "monthly", 45, 0, 1),
-            Series("young", "fred", "YOUNG", "monthly", 45, 0, 1),
-        ],
-        indicators=[
-            Indicator("i_up", "Up", "valuation", "magnitude", "normal", 1, series="up"),
-            Indicator("i_down", "Down", "leverage", "timing", "invert", 1, series="down"),
-            Indicator("i_young", "Young", "sentiment", "timing", "normal", 1, series="young"),
-        ],
-        pillar_weights={"valuation": 0.5, "leverage": 0.3, "sentiment": 0.2},
-    )
+def make_reg(with_confirmation=False):
+    series = [
+        Series("up", "fred", "UP", "monthly", 45, 0, 1),
+        Series("down", "fred", "DOWN", "monthly", 45, 0, 1),
+        Series("young", "fred", "YOUNG", "monthly", 45, 0, 1),
+    ]
+    indicators = [
+        Indicator("i_up", "Up", "valuation", "magnitude", "normal", 1, series="up"),
+        Indicator("i_down", "Down", "leverage", "timing", "invert", 1, series="down"),
+        Indicator("i_young", "Young", "sentiment", "timing", "normal", 1, series="young"),
+    ]
+    if with_confirmation:
+        series.append(Series("conf", "fred", "CONF", "monthly", 45, 0, 1))
+        indicators.append(
+            Indicator("i_conf", "Conf", "valuation", "confirmation", "normal", 1, series="conf"))
+    return Registry(series=series, indicators=indicators,
+                    pillar_weights={"valuation": 0.5, "leverage": 0.3, "sentiment": 0.2})
 
 
-def make_raw():
-    # 12+ years monthly, ending 2012-12-31
+def make_raw(with_confirmation=False):
     idx = pd.date_range("2000-01-31", "2012-12-31", freq="ME")
-    up = pd.Series(np.arange(1.0, len(idx) + 1), index=idx)      # always at its max -> pct 100
-    down = pd.Series(-np.arange(1.0, len(idx) + 1), index=idx)   # always at its min -> pct ~0, inverted -> ~100
-    young = pd.Series([1.0, 2.0], index=pd.to_datetime(["2012-11-30", "2012-12-31"]))  # <10y: excluded
-    return {"up": up, "down": down, "young": young}
+    up = pd.Series(np.arange(1.0, len(idx) + 1), index=idx)
+    down = pd.Series(-np.arange(1.0, len(idx) + 1), index=idx)
+    young = pd.Series([1.0, 2.0], index=pd.to_datetime(["2012-11-30", "2012-12-31"]))
+    raw = {"up": up, "down": down, "young": young}
+    if with_confirmation:
+        raw["conf"] = pd.Series(np.arange(1.0, len(idx) + 1), index=idx)  # always at max -> froth 100
+    return raw
 
 
 def test_regime_for():
@@ -74,13 +81,38 @@ def test_composite_reweights_missing_pillars():
     assert comp == pytest.approx(expected, abs=0.01)
 
 
+def test_confirmation_excluded_from_composite_and_pillars():
+    reg = make_reg(with_confirmation=True)
+    res = scores.compute_scores(reg, TH, make_raw(with_confirmation=True))
+    # i_conf froth is ~100 and sits in the valuation pillar; if it leaked in,
+    # valuation would exceed the i_up-only value. It must equal the i_up-only pillar.
+    res_no_conf = scores.compute_scores(make_reg(), TH, make_raw())
+    last = lambda r, p: r.pillars[(r.pillars.window == "full") & (r.pillars.pillar == p)].iloc[-1]["score"]
+    assert last(res, "valuation") == pytest.approx(last(res_no_conf, "valuation"))
+    comp = lambda r: r.composite[r.composite.window == "full"].iloc[-1]["score"]
+    assert comp(res) == pytest.approx(comp(res_no_conf))
+
+
+def test_stress_series_from_confirmation_only():
+    reg = make_reg(with_confirmation=True)
+    res = scores.compute_scores(reg, TH, make_raw(with_confirmation=True))
+    st = res.stress[res.stress.window == "full"]
+    assert not st.empty
+    assert st.iloc[-1]["score"] == pytest.approx(100.0, abs=0.5)  # single conf indicator at max
+    # no confirmation indicators -> empty stress frame with the right columns
+    res2 = scores.compute_scores(make_reg(), TH, make_raw())
+    assert list(res2.stress.columns) == ["date", "window", "score"]
+    assert res2.stress.empty
+
+
 def test_append_scores_is_append_only(tmp_path, monkeypatch):
     monkeypatch.setattr(store.paths, "DATA_SCORES", tmp_path)
-    res = scores.compute_scores(make_reg(), TH, make_raw())
-    n1, _ = scores.append_scores(res)
+    res = scores.compute_scores(make_reg(with_confirmation=True), TH, make_raw(with_confirmation=True))
+    n1, _, s1 = scores.append_scores(res)
     assert n1 > 0
-    n2, m2 = scores.append_scores(res)  # idempotent second run
-    assert n2 == 0 and m2 == 0
+    n2, m2, s2 = scores.append_scores(res)  # idempotent second run
+    assert n2 == 0 and m2 == 0 and s2 == 0
     df = pd.read_csv(tmp_path / "composite.csv", parse_dates=["date"])
     assert list(df.columns) == ["date", "window", "score", "regime"]
     assert df.duplicated(subset=["date", "window"]).sum() == 0
+    assert (tmp_path / "stress.csv").exists()

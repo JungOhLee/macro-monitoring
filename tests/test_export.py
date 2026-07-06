@@ -16,13 +16,13 @@ def site(tmp_path, monkeypatch):
     monkeypatch.setattr(export.paths, "SITE_DATA", tmp_path / "site_data")
     monkeypatch.setattr(store.paths, "DATA_RAW", tmp_path / "raw")
     monkeypatch.setattr(store.paths, "DATA_STATE", tmp_path / "state")
-    for sid, s in make_raw().items():
+    for sid, s in make_raw(with_confirmation=True).items():
         store.write_series(sid, s)
     return tmp_path / "site_data"
 
 
 def test_export_writes_three_files_with_contract(site):
-    payload = export.export_site(make_reg(), THX)
+    payload = export.export_site(make_reg(with_confirmation=True), THX)
     latest = json.loads((site / "latest.json").read_text())
     history = json.loads((site / "history.json").read_text())
     indicators = json.loads((site / "indicators.json").read_text())
@@ -42,6 +42,10 @@ def test_export_writes_three_files_with_contract(site):
     assert indicators["i_up"]["latest"]["pct_full"] == 100.0
     assert indicators["i_up"]["pillar"] == "valuation"
     assert len(indicators["i_up"]["series"]["dates"]) <= 1000
+
+    assert latest["stress"]["full"]["label"] in ("quiet", "elevated", "confirming")
+    assert latest["stress"]["full"]["score"] == pytest.approx(100.0, abs=0.5)
+    assert "stress" in history["full"]
 
 
 def test_export_deterministic(site):

@@ -31,9 +31,9 @@ def cmd_run(args: argparse.Namespace) -> int:
           + (f"; failed: {', '.join(failed)}" if failed else ""))
     raw = {s.id: store.read_series(s.id) for s in reg.series}
     result = compute_scores(reg, load_thresholds(), raw)
-    n_comp, n_pil = append_scores(result)
+    n_comp, n_pil, n_stress = append_scores(result)
     latest = result.composite[result.composite.window == "full"].iloc[-1]
-    print(f"scores: +{n_comp} composite rows, +{n_pil} pillar rows; "
+    print(f"scores: +{n_comp} composite rows, +{n_pil} pillar rows, +{n_stress} stress rows; "
           f"latest {latest['date']:%Y-%m-%d} composite={latest['score']} ({latest['regime']})")
     return 0
 

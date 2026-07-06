@@ -6,7 +6,7 @@ import math
 import pandas as pd
 
 from pipeline import paths, store
-from pipeline.compute.scores import compute_scores
+from pipeline.compute.scores import compute_scores, regime_for
 from pipeline.ingest import stale_series
 from pipeline.registry import Registry
 
@@ -62,12 +62,23 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
             "score": _r(rows.iloc[-1]["score"], 2),
             "regime": rows.iloc[-1]["regime"],
         }
+    stress_bands = thresholds["stress_bands"]
+    stress = {}
+    for window in ("full", "rolling20y"):
+        rows = result.stress[result.stress.window == window]
+        if rows.empty:
+            stress[window] = None
+            continue
+        val = float(rows.sort_values("date").iloc[-1]["score"])
+        stress[window] = {"score": _r(val, 2), "label": regime_for(val, stress_bands)}
+
     pillars = {}
-    per_pillar_total = {p: sum(1 for i in reg.indicators if i.pillar == p) for p in reg.pillar_weights}
+    per_pillar_total = {p: sum(1 for i in reg.indicators if i.pillar == p and i.role != "confirmation")
+                        for p in reg.pillar_weights}
     per_pillar_active = {p: 0 for p in reg.pillar_weights}
     for ind in reg.indicators:
         r = result.indicators.get(ind.id)
-        if r is not None and not r.froth_full.empty:
+        if ind.role != "confirmation" and r is not None and not r.froth_full.empty:
             per_pillar_active[ind.pillar] += 1
     for p, w in reg.pillar_weights.items():
         rows = result.pillars[(result.pillars.pillar == p)]
@@ -85,6 +96,7 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     latest = {
         "as_of": as_of.strftime("%Y-%m-%d"),
         "composite": comp,
+        "stress": stress,
         "pillars": pillars,
         "analogs": None,
         "sequence": None,
@@ -117,6 +129,10 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
             "composite": [_r(v, 2) for v in weekly.to_numpy()],
             "pillars": pw,
         }
+        srows = result.stress[result.stress.window == window]
+        if not srows.empty:
+            saligned = srows.set_index("date")["score"].resample("W-FRI").last().reindex(weekly.index)
+            history[window]["stress"] = [_r(v, 2) for v in saligned.to_numpy()]
 
     # ---- indicators.json ----
     indicators = {}

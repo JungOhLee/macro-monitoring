@@ -26,6 +26,7 @@ class ScoreResult:
     composite: pd.DataFrame
     pillars: pd.DataFrame
     indicators: dict[str, IndicatorResult]
+    stress: pd.DataFrame
 
 
 def indicator_frequency(ind: Indicator, reg: Registry) -> str:
@@ -77,14 +78,14 @@ def compute_scores(
 
     bands = thresholds["regime_bands"]
     weights = pd.Series(reg.pillar_weights, dtype=float)
-    comp_rows, pillar_rows = [], []
+    comp_rows, pillar_rows, stress_rows = [], [], []
     for window in WINDOWS:
         cols = {}
         for pillar in reg.pillar_weights:
             members = [
                 froth_daily[i.id][window]
                 for i in reg.indicators
-                if i.pillar == pillar and i.id in froth_daily
+                if i.pillar == pillar and i.id in froth_daily and i.role != "confirmation"
             ]
             if members:
                 cols[pillar] = pd.concat(members, axis=1).mean(axis=1)
@@ -103,10 +104,21 @@ def compute_scores(
             pillar_rows.append({"date": r.date, "window": window, "pillar": r.pillar,
                                 "score": round(float(r.score), 2)})
 
+        conf_members = [
+            froth_daily[i.id][window]
+            for i in reg.indicators
+            if i.role == "confirmation" and i.id in froth_daily
+        ]
+        if conf_members:
+            stress_series = pd.concat(conf_members, axis=1).mean(axis=1).dropna()
+            for dt, val in stress_series.items():
+                stress_rows.append({"date": dt, "window": window, "score": round(float(val), 2)})
+
     return ScoreResult(
         composite=pd.DataFrame(comp_rows, columns=["date", "window", "score", "regime"]),
         pillars=pd.DataFrame(pillar_rows, columns=["date", "window", "pillar", "score"]),
         indicators=indicators,
+        stress=pd.DataFrame(stress_rows, columns=["date", "window", "score"]),
     )
 
 
@@ -127,9 +139,11 @@ def _append(fp, df: pd.DataFrame) -> int:
     return len(new)
 
 
-def append_scores(result: ScoreResult) -> tuple[int, int]:
+def append_scores(result: ScoreResult) -> tuple[int, int, int]:
     n_comp = _append(paths.DATA_SCORES / "composite.csv",
                      result.composite.sort_values(["date", "window"]))
     n_pil = _append(paths.DATA_SCORES / "pillars.csv",
                     result.pillars.sort_values(["date", "window", "pillar"]))
-    return n_comp, n_pil
+    n_stress = _append(paths.DATA_SCORES / "stress.csv",
+                       result.stress.sort_values(["date", "window"]))
+    return n_comp, n_pil, n_stress
