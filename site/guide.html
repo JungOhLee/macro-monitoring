@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to read this dashboard - Macro Bubble Monitor</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header><h1><a href="index.html" style="text-decoration:none;color:inherit">&larr; Macro Bubble Monitor</a></h1></header>
+<article class="card">
+<h1>How to read this dashboard</h1>
+<p>This dashboard tracks a small set of macro and market conditions that showed up, in
+various combinations, before past financial crises &mdash; the 2000 dot-com bust, the
+2007-08 financial crisis, 1987's Black Monday, and others back to 1973. The goal isn't
+to predict the next crash. It's to let you see, in plain numbers, whether today's economy
+and markets resemble the run-up to any of those past episodes, and which specific
+ingredient (cheap money, excess debt, extreme valuations, credit stress&hellip;) looks
+most like the historical pattern. Below is what each part of the dashboard shows, in the
+order it appears, and &mdash; just as important &mdash; what it does <em>not</em> mean.</p>
+
+<h2>1. Composite gauge &amp; regime bands</h2>
+<p>The big dial at the top blends the five pillar scores below into one 0&ndash;100
+"composite" number: a weighted average of how extreme today's key indicators are versus
+their own history back to 1975. It's a percentile-style reading, not a price level or a
+forecast. The four color bands &mdash; Cool, Warm, Frothy, Bubble risk &mdash; are
+historical quantiles of that same composite: the Cool/Warm line sits at the 50th
+percentile (64), Warm/Frothy at the 85th (76), and Frothy/Bubble-risk at the 95th (83).
+Because "Cool" is defined as below the historical median, half of all history counts as
+Cool by construction &mdash; a Warm or Frothy reading means conditions are stretched
+versus history, not that a crash is imminent. The "rolling 20y" toggle is a secondary,
+display-only view using just the last 20 years for recency context; every alert and the
+sequence tracker always use the full-history version underneath.</p>
+
+<h2>2. Pillar bars</h2>
+<p>The five bars are the composite's ingredients, weighted differently in the blend:
+<strong>Valuation</strong> (30%) &mdash; how expensive stocks are versus earnings and GDP;
+<strong>Leverage</strong> (25%) &mdash; how much debt is built up in the system (household
+and corporate debt, credit spreads, margin debt, bank lending standards);
+<strong>Liquidity</strong> (20%) &mdash; how much cheap money is available (money-supply
+growth, the Fed's balance sheet, real interest rates, the yield curve);
+<strong>Sentiment</strong> (15%) &mdash; how speculative markets are behaving (the VIX,
+Bitcoin); and <strong>Macro</strong> (10%) &mdash; market breadth, whether gains are broad
+or narrow. One hot pillar does not make a hot composite: through 1980-81, the leverage
+pillar sat at a then-record 77.5&ndash;86.1 (Frothy-to-Bubble-risk territory) on genuinely
+high household and corporate debt, yet the composite stayed Cool (37.8&ndash;54.6)
+throughout, because valuation was near its all-time cheapest (Shiller CAPE &asymp;9.65 in
+November 1980) and offset it. Read the bars alongside the gauge, not instead of it.</p>
+
+<h2>3. Confirmation stress gauge</h2>
+<p>Next to the gauge is a separate reading, "Confirmation stress." It averages four
+indicators: the Sahm rule (a recession-timing rule based on unemployment), the Chicago
+Fed's CFNAI activity index, whether the S&amp;P 500 has broken below its 200-day average,
+and the trade-weighted dollar. These are deliberately kept out of the composite score
+above, because historically they only turn hot during or after a downturn is already
+under way &mdash; folding them into the "bubble" score made it rise during past crashes
+instead of warning ahead of them. Below 40 reads Quiet, 40&ndash;70 Elevated, above 70
+Confirming. Think of the composite as "how stretched is the setup" and this gauge as "has
+the break actually started" &mdash; two different questions, answered by two different
+sets of indicators.</p>
+
+<h2>4. Pre-crisis sequence tracker</h2>
+<p>This tracker watches for six classic pre-bust conditions: (1) valuation stretched for a
+long stretch, (2) margin debt peaking then rolling over, (3) the yield curve re-steepening
+after having been inverted, (4) credit spreads widening off their lows, (5) market breadth
+diverging from the index near its highs, and (6) price confirming with a break below its
+200-day average alongside recession or volatility signals. "Engaged" means at least two of
+stages 1&ndash;3 have fired, or &mdash; for credit-driven downturns like 1990 &mdash;
+stages 3 and 4 are both true at once. A stage "lapses" (stops counting) after its condition
+is false for about three months; the tracker resets once the market later falls 20% from
+its post-engagement high. One nuance worth remembering: stages needn't fire in numeric
+order, and "current stage" just means the highest-numbered stage fired right now &mdash;
+so "Engaged, stage 3" doesn't mean stages 1 and 2 already happened, it means the pattern is
+partly formed and stage 3's own signal (curve re-steepening) is the one lit up. Read the
+labeled signal, not just the number.</p>
+
+<h2>5. Score history chart</h2>
+<p>This chart plots the composite &mdash; and, via the tabs, each pillar plus the
+confirmation-stress gauge &mdash; back through history, with the Cool/Warm/Frothy/
+Bubble-risk bands shaded behind it. Vertical lines mark past crisis peaks: red for the
+episodes with full narrative and data support (1973, 1980, 1987, 1990, 2000, 2007, 2020,
+2022), gray for two older, thinner-data episodes shown only as markers (1929, 1937). A
+translucent S&amp;P 500 line (log scale) rides along for price context. The most useful
+way to read it: compare today's composite level and shape to the run-up before each red
+line &mdash; was it climbing for years, like 1997&ndash;2000, or spiking suddenly, like
+early 2020? &mdash; rather than treating any single crossing of a band edge as a buy or
+sell signal by itself.</p>
+
+<h2>6. Closest historical analogs</h2>
+<p>This card finds which past episode's build-up today's indicator profile most resembles.
+Each past episode was "snapshotted" at fixed points before its peak &mdash; for example,
+"dotcom T&minus;24" means the market's condition 24 months before the March 2000 dot-com
+peak. Today's percentile profile is compared against every snapshot by cosine similarity,
+after first subtracting the neutral 50th-percentile baseline from every value, so the
+comparison measures real agreement rather than the fact that two all-positive lists of
+numbers always look somewhat alike. A match above 0.98 is notable specifically because,
+across a 474-month backtest replay (1987&ndash;2026), only the top 10% of months' best
+matches reach that high &mdash; a typical month's best match is a much lower ~0.84. Most
+days should show no strong analog at all; that's the design working as intended.</p>
+
+<h2>7. Macro context panel</h2>
+<p>CPI, core CPI, PPI, payroll growth, unemployment, job openings, and the Fed funds rate
+sit here as background information only. They help explain <em>why</em> conditions are
+what they are (is liquidity tight because the Fed is fighting inflation, or because growth
+is slowing?) but are deliberately excluded from every scored calculation on this
+page &mdash; the composite, the pillars, the confirmation gauge, the analog comparisons,
+and the sequence tracker all ignore them entirely. Their percentile chips are a plain
+historical rank of the raw value (higher number always means a higher percentile; none of
+these are "inverted" the way a couple of pillar indicators are). One gap worth knowing:
+the ISM manufacturing survey, a classic activity gauge, is no longer freely available, so
+the Chicago Fed's CFNAI (found in the confirmation-stress gauge, section 3) stands in as
+the activity proxy instead.</p>
+
+<h2>8. Indicator drill-down</h2>
+<p>Pick any single indicator &mdash; or up to four at once with "+ Compare" &mdash; to see
+its raw-value history and its percentile-versus-own-history ("froth") chart side by side,
+with dotted red lines marking the 80th and 90th percentile levels and an S&amp;P 500
+overlay for price context on the raw chart. With one indicator selected, this is exactly
+the single-indicator view. Comparing several works differently for the two charts, on
+purpose: percentiles all share one 0&ndash;100 axis, because "rank versus own history" is
+directly comparable across indicators no matter their units, while raw values each get
+their own separate mini-chart, because a debt ratio, an interest rate, and a stock index
+aren't measured in the same units and would be meaningless stacked on one shared axis.</p>
+
+<h2>9. Backtest &amp; honesty</h2>
+<p>The Backtest page (linked in the nav) checks whether the sequence tracker would
+actually have caught past crises. Five criteria: would it have reached stage 4 or higher
+within the 18 months before each of four real peaks (dot-com 2000, the 2007-08 financial
+crisis, the 1990 recession, and the 2022 post-COVID unwind), and did it stay quiet &mdash;
+no false "engaged" reading &mdash; through all of 2019 as a control? Current score: 4 of 5
+pass. The one honest failure is dot-com: the tracker never advances past stage 0 before
+that peak, because two of its inputs (a long-enough margin-debt history, a qualifying
+curve inversion) simply don't have usable data that far back &mdash; a data-coverage gap,
+not a model flaw. The standing rule behind every number on this site: thresholds are only
+changed when new evidence is written down in advance, never adjusted after the fact just
+to turn a failing check green.</p>
+
+<h2>10. Data freshness &amp; caveats</h2>
+<p>Every series updates automatically once a day through a scheduled job (with a same-day
+catch-up run as backup); each has a "staleness budget" &mdash; daily series are flagged if
+more than about a week old, monthly ones after about 45 days, quarterly after about 120
+days, adjusted for each series' normal reporting lag. Some government series get revised
+after first release; the site keeps the latest revision, not a frozen first print.
+Historical percentiles are computed point-in-time &mdash; each date on the charts only
+reflects what would have been knowable as of that date, with no hindsight baked in.
+Standing caveat, worth repeating: this dashboard is a study tool for understanding how
+past crises built up and whether today rhymes with them. It is not investment advice, and
+no single reading here should be treated as a buy, sell, or timing signal.</p>
+</article>
+<footer class="muted">Monitoring context, not a trading signal.</footer>
+</body>
+</html>
