@@ -3001,6 +3001,10 @@ Expected: suite green, clean linear history of task commits, status shows no une
 
 ---
 
+## Amendments
+
+**2026-07-06 (during Task 6):** Stooq serves a JS anti-bot challenge to headless clients — all four Stooq series substituted per design-doc amendment of same date: `spx` → FRED `SP500` daily + one-time Yahoo `^GSPC` history seed (`scripts/seed_spx_history.py`); `rsp`/`spy`/`btcusd` → `pipeline/ingest/yahoo.py` (v8 chart API, range=max, staleness budget 14d). `pipeline/ingest/stooq.py` and its tests removed; registry `VALID_SOURCES` is now `("fred", "yahoo")`. Tasks 9–11 references to "Stooq" in prose read as "FRED SP500/Yahoo".
+
 ## Plan Self-Review (performed at write time)
 
 1. **Spec coverage (Phases 1–2):** registry-driven config ✔ (T1), isolated ingestion + freshness ✔ (T2/T6), dual-window percentiles + 10y gate + native-frequency/as-of ✔ (T7/T8), reweighted pillar/composite + regime ✔ (T8), append-mostly storage with revision windows ✔ (T2), offline export + committed site JSON ✔ (T9), dashboard views 1–3/6 with Phase-3 placeholder slots, staleness badges, role chips, window toggle, crisis markers ✔ (T10), workflow with off-peak double cron, permissions, no-commit tolerance, Pages artifact deploy ✔ (T11), labeled-issue alerts with per-label cooldown + CI gating ✔ (T12), narrative drafts shipped in Phase 2 per design §9 ✔ (T13), one-time setup checklist §16 ✔ (T11 script + T14 verification). Deferred to Phase 3+ by design: analogs, sequencer, backtest, z-score Euclidean comparison, Shiller/FINRA/AAII/CBOE sources.

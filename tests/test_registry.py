@@ -30,7 +30,7 @@ def test_enums_valid():
         assert ind.role in ("timing", "magnitude", "confirmation")
         assert ind.pillar in reg.pillar_weights
     for s in reg.series:
-        assert s.source in ("fred", "stooq")
+        assert s.source in ("fred", "yahoo")
         assert s.frequency in ("daily", "weekly", "monthly", "quarterly")
 
 
