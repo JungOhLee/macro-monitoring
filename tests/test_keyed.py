@@ -14,21 +14,19 @@ class FakeResp:
         return self._payload
 
 
-def test_fetch_equity_parses_adjusted_close(monkeypatch):
+def test_fetch_equity_parses_close(monkeypatch):
+    # Free-tier TIME_SERIES_DAILY shape: no "5. adjusted close" field (that
+    # lives only on the premium TIME_SERIES_DAILY_ADJUSTED endpoint).
     payload = {
         "Meta Data": {"2. Symbol": "RSP"},
         "Time Series (Daily)": {
             "2026-01-03": {
                 "1. open": "150.0", "2. high": "151.0", "3. low": "149.0",
-                "4. close": "150.5", "5. adjusted close": "150.5",
-                "6. volume": "1000000", "7. dividend amount": "0.0000",
-                "8. split coefficient": "1.0",
+                "4. close": "150.5", "5. volume": "1000000",
             },
             "2026-01-02": {
                 "1. open": "148.0", "2. high": "149.5", "3. low": "147.5",
-                "4. close": "149.0", "5. adjusted close": "149.0",
-                "6. volume": "900000", "7. dividend amount": "0.0000",
-                "8. split coefficient": "1.0",
+                "4. close": "149.0", "5. volume": "900000",
             },
         },
     }
@@ -42,7 +40,8 @@ def test_fetch_equity_parses_adjusted_close(monkeypatch):
     s = keyed.fetch_alphavantage("RSP", "KEY")
     assert list(s.values) == [149.0, 150.5]
     assert list(s.index) == [pd.Timestamp("2026-01-02"), pd.Timestamp("2026-01-03")]
-    assert captured["params"]["function"] == "TIME_SERIES_DAILY_ADJUSTED"
+    assert captured["params"]["function"] == "TIME_SERIES_DAILY"
+    assert captured["params"]["outputsize"] == "compact"
     assert captured["params"]["symbol"] == "RSP"
     assert captured["params"]["apikey"] == "KEY"
     assert captured["timeout"] == 30
@@ -126,7 +125,7 @@ def test_connection_error_sanitized(monkeypatch):
         raise requests.ConnectionError(
             "HTTPSConnectionPool(host='www.alphavantage.co', port=443): "
             "Max retries exceeded with url: "
-            "/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=RSP&apikey=TOPSECRET refused"
+            "/query?function=TIME_SERIES_DAILY&symbol=RSP&apikey=TOPSECRET refused"
         )
 
     monkeypatch.setattr(keyed.requests, "get", fake_get)
@@ -153,10 +152,33 @@ def test_non_json_body_sanitized(monkeypatch):
 
 
 def test_note_payload_never_leaks_key_even_if_echoed(monkeypatch):
-    """Defense in depth: even if Alpha Vantage's own message text echoed the key,
-    our error strings never quote payload message bodies -- only the key name."""
+    """Defense in depth: even if Alpha Vantage's own message text echoed the
+    key, our error strings scrub it to '***' before including the (now-safe)
+    message excerpt -- the key itself never appears verbatim, but the
+    surrounding diagnostic text is preserved for debugging."""
     payload = {"Note": "your key SNEAKYKEY123 has been used too many times"}
     monkeypatch.setattr(keyed.requests, "get", lambda *a, **k: FakeResp(payload))
     with pytest.raises(RuntimeError) as excinfo:
         keyed.fetch_alphavantage("RSP", "SNEAKYKEY123")
-    assert "SNEAKYKEY123" not in str(excinfo.value)
+    msg = str(excinfo.value)
+    assert "SNEAKYKEY123" not in msg
+    assert "***" in msg
+    assert "has been used too many times" in msg
+
+
+def test_soft_failure_excerpt_is_truncated(monkeypatch):
+    """A message longer than 200 chars is truncated so we never embed an
+    unbounded response body in a raised label."""
+    long_text = "Information: " + ("x" * 300)
+    payload = {"Information": long_text}
+    monkeypatch.setattr(keyed.requests, "get", lambda *a, **k: FakeResp(payload))
+    with pytest.raises(RuntimeError) as excinfo:
+        keyed.fetch_alphavantage("SPY", "KEY")
+    msg = str(excinfo.value)
+    # Everything after "Alpha Vantage Information response for SPY: " is the
+    # excerpt; it must be capped at 200 chars.
+    prefix = "Alpha Vantage Information response for SPY: "
+    assert msg.startswith(prefix)
+    excerpt = msg[len(prefix):]
+    assert len(excerpt) == 200
+    assert long_text.startswith(excerpt)

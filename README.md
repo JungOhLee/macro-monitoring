@@ -17,10 +17,15 @@ updated daily by GitHub Actions, with crisis-comparison context.
   yourself: put a free FRED key in `.env` (`FRED_API_KEY=...`) and run
   `python -m pipeline run && python -m pipeline export`. `rsp`/`spy`/`btcusd`
   use Alpha Vantage when `ALPHAVANTAGE_KEY` is set (in `.env` locally or as a
-  repo secret in CI); dormant otherwise (no key supplied yet in any
-  environment), in which case they fall back to Yahoo's v8 chart API, which
-  works from residential IPs but 429s intermittently from GitHub Actions
-  runners - 14-day staleness budgets absorb the blocked stretches.
+  repo secret in CI, where it's active as of 2026-07-06); RSP/SPY fetch the
+  free-tier `TIME_SERIES_DAILY` endpoint (`outputsize=compact`, raw `"4.
+  close"`) rather than the premium `TIME_SERIES_DAILY_ADJUSTED` - matching
+  Yahoo's own raw (unadjusted) close so the two sources splice consistently
+  onto one history instead of mixing adjusted and unadjusted observations.
+  Without a key (or on any Alpha Vantage failure), all three fall back to
+  Yahoo's v8 chart API, which works from residential IPs but 429s
+  intermittently from GitHub Actions runners - 14-day staleness budgets
+  absorb the blocked stretches.
 - **Status:** Phase 1-2 complete (scoring, dashboard, alerts, narrative drafts).
   **Phase 3 complete:** role-aware composite + stress gauge, analog similarity
   with SVG radar, pre-crisis sequence tracker,

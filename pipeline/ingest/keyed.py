@@ -6,7 +6,7 @@ import requests
 API_URL = "https://www.alphavantage.co/query"
 
 # Alpha Vantage symbols that use the digital-currency endpoint; everything else
-# is treated as an equity/ETF symbol on TIME_SERIES_DAILY_ADJUSTED.
+# is treated as an equity/ETF symbol on TIME_SERIES_DAILY (see _fetch_equity).
 _CRYPTO_SYMBOLS = {"BTC"}
 
 # Free-tier responses are HTTP 200 with a JSON body carrying one of these keys
@@ -21,12 +21,19 @@ def fetch_alphavantage(series: str, api_key: str) -> pd.Series:
     return _fetch_equity(series, api_key)
 
 
-def _get_json(params: dict, series: str) -> dict:
+# Soft-failure messages are truncated to this many characters (after the key
+# scrub) before being embedded in a raised label -- long enough to diagnose,
+# short enough to never accidentally carry an entire unbounded response body.
+_SOFT_FAILURE_EXCERPT_LEN = 200
+
+
+def _get_json(params: dict, series: str, api_key: str) -> dict:
     """Shared request/parse path with the fred.py sanitized-error discipline:
     every raise happens outside the except block (so __context__ stays None
     and the key -- which rides in the query string -- can never leak via
-    exception chaining), and we only ever quote our own static labels, never
-    the response body or the raw exception message."""
+    exception chaining), and we only ever quote our own static labels plus a
+    key-scrubbed excerpt of soft-failure message bodies, never the raw
+    response body or the raw exception message."""
     failure = None
     resp = None
     try:
@@ -47,24 +54,34 @@ def _get_json(params: dict, series: str) -> dict:
         raise RuntimeError(f"Alpha Vantage returned unexpected payload for {series}")
     for bad_key in _SOFT_FAILURE_KEYS:
         if bad_key in payload:
-            raise RuntimeError(f"Alpha Vantage {bad_key} response for {series}")
+            text = str(payload[bad_key]).replace(api_key, "***")[:_SOFT_FAILURE_EXCERPT_LEN]
+            raise RuntimeError(f"Alpha Vantage {bad_key} response for {series}: {text}")
     return payload
 
 
 def _fetch_equity(series: str, api_key: str) -> pd.Series:
+    # TIME_SERIES_DAILY_ADJUSTED is a premium endpoint ("this is a premium API
+    # function" per Alpha Vantage docs); the free tier only offers
+    # TIME_SERIES_DAILY (outputsize=compact -> latest ~100 observations,
+    # which is plenty since run_ingest merges onto the committed deep
+    # history -- see store.merge_observations). We deliberately use the raw
+    # "4. close" rather than an adjusted close: yahoo.py stores
+    # indicators.quote[0].close (also raw/unadjusted), so matching raw-to-raw
+    # keeps Alpha Vantage and Yahoo observations splicing consistently
+    # instead of silently mixing adjusted and unadjusted history.
     payload = _get_json({
-        "function": "TIME_SERIES_DAILY_ADJUSTED",
+        "function": "TIME_SERIES_DAILY",
         "symbol": series,
-        "outputsize": "full",
+        "outputsize": "compact",
         "apikey": api_key,
-    }, series)
+    }, series, api_key)
     daily = payload.get("Time Series (Daily)")
     if not isinstance(daily, dict) or not daily:
         raise RuntimeError(f"Alpha Vantage returned no observations for {series}")
     dates, values = [], []
     for date, fields in daily.items():
         try:
-            values.append(float(fields["5. adjusted close"]))
+            values.append(float(fields["4. close"]))
         except (KeyError, TypeError, ValueError):
             continue
         dates.append(date)
@@ -79,7 +96,7 @@ def _fetch_crypto(series: str, api_key: str) -> pd.Series:
         "symbol": series,
         "market": "USD",
         "apikey": api_key,
-    }, series)
+    }, series, api_key)
     daily = payload.get("Time Series (Digital Currency Daily)")
     if not isinstance(daily, dict) or not daily:
         raise RuntimeError(f"Alpha Vantage returned no observations for {series}")
