@@ -10,7 +10,7 @@ from pipeline import paths
 def read_series(series_id: str) -> pd.Series:
     fp = paths.DATA_RAW / f"{series_id}.csv"
     if not fp.exists():
-        return pd.Series(dtype=float, name=series_id)
+        return pd.Series(dtype=float, index=pd.DatetimeIndex([]), name=series_id)
     df = pd.read_csv(fp, parse_dates=["date"])
     idx = pd.DatetimeIndex(df["date"].values)
     s = pd.Series(df["value"].to_numpy(dtype=float), index=idx, name=series_id)
@@ -32,6 +32,8 @@ def merge_observations(
     Stored rows are never deleted."""
     fetched = fetched.dropna().sort_index()
     if existing.empty:
+        fetched = fetched.copy()
+        fetched.name = existing.name or fetched.name
         return fetched, len(fetched)
     cutoff = existing.index.max() - pd.Timedelta(days=revision_window_days)
     merged = existing.copy()

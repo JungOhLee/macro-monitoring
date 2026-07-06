@@ -38,8 +38,10 @@ def test_merge_never_deletes_stored_rows():
 
 def test_merge_empty_existing():
     fetched = s([("2026-01-01", 1.0)])
-    merged, changed = store.merge_observations(pd.Series(dtype=float), fetched, 0)
+    existing = pd.Series(dtype=float, index=pd.DatetimeIndex([]), name="demo")
+    merged, changed = store.merge_observations(existing, fetched, 0)
     assert changed == 1 and len(merged) == 1
+    assert merged.name == "demo"
 
 
 def test_roundtrip(tmp_path, monkeypatch):
@@ -50,7 +52,10 @@ def test_roundtrip(tmp_path, monkeypatch):
     assert back.name == "demo"
     pd.testing.assert_index_equal(back.index, data.index)
     assert list(back.values) == [1.5, 2.5]
-    assert store.read_series("missing").empty
+    missing = store.read_series("missing")
+    assert missing.empty
+    assert isinstance(missing.index, pd.DatetimeIndex)
+    assert missing.name == "missing"
 
 
 def test_freshness_roundtrip(tmp_path, monkeypatch):
