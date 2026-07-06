@@ -138,6 +138,11 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
         "episode_peaks": [e["peak"] for e in all_eps],
         "regime_bands": thresholds["regime_bands"],
     }
+    # S&P 500 price overlay for the frontend charts: the same full raw series
+    # regardless of window, so it lives at the top level rather than per-window.
+    spx_raw = raw.get("spx")
+    if spx_raw is not None and not spx_raw.empty:
+        history["spx"] = _series_json(spx_raw)
     for window in ("full", "rolling20y"):
         cw = result.composite[result.composite.window == window].set_index("date")
         if cw.empty:

@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -120,6 +121,32 @@ def test_export_analogs_in_latest(site, monkeypatch):
     payload = export.export_site(make_reg(), THX)
     # today's vector only has i_up/i_down (+gated i_young absent) => shared=2 < 8 -> no analogs
     assert payload["analogs"] is None
+
+
+def test_export_includes_spx_overlay(site, monkeypatch):
+    import pipeline.registry as registry
+
+    monkeypatch.setattr(registry, "load_episodes", lambda: EPI_STUB)
+    reg = make_reg(with_confirmation=True)
+    reg = Registry(
+        series=reg.series + [Series("spx", "fred", "SP500", "daily", 7, 7, 1)],
+        indicators=reg.indicators,
+        pillar_weights=reg.pillar_weights,
+    )
+    idx = pd.date_range("1927-12-30", periods=1500, freq="D")
+    spx = pd.Series(np.arange(1.0, len(idx) + 1) + 10.0, index=idx)
+    store.write_series("spx", spx)
+
+    export.export_site(reg, THX)
+    history = json.loads((site / "history.json").read_text())
+
+    spx_hist = history["spx"]
+    assert len(spx_hist["dates"]) == len(spx_hist["values"])
+    assert len(spx_hist["dates"]) <= 1000
+    assert spx_hist["dates"][0].startswith("1927")
+    assert all(v is not None and v > 0 for v in spx_hist["values"])
+    # spx is the same series regardless of window -- lives at the top level.
+    assert "spx" not in history["full"]
 
 
 def test_downsample_never_exceeds_max():

@@ -182,6 +182,8 @@ Fully graphical, mobile-friendly, rendered by a vendored **Plotly partial bundle
 
 Footer on every page: *monitoring context, not a trading signal.*
 
+**Amendment 2026-07-06 (S&P 500 overlay, user-requested):** A S&P 500 log-scale overlay (secondary axis) was added to the Score History chart (view 3) and to the indicator drill-down raw-value chart (view 6, `indicator-raw` only — the percentile chart stays clean) for price context; the underlying `spx` series is exported once, at `history.json`'s top level (not per-window, since it's the same series regardless of the full/rolling-20y toggle), and reused by both views.
+
 ## 8. Sequencer, Alerts
 
 ### 8a. Semantics

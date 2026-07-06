@@ -168,6 +168,11 @@ function renderHistory() {
     traces.push({ x: h.dates, y: h.composite, name: "Composite (ref)",
                   line: { color: "#8b93a3", width: 1, dash: "dash" }, opacity: 0.6 });
   }
+  if (HISTORY.spx) {
+    traces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
+                  yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
+                  hovertemplate: "%{y:,.0f}<extra>S&P 500</extra>" });
+  }
   traces.push(crisisLabels(97));
   const shapes = crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
   const [e1, e2, e3] = regimeEdges();
@@ -177,6 +182,8 @@ function renderHistory() {
     shapes.push({ type:"rect", xref:"paper", x0:0, x1:1, y0, y1, fillcolor:c, line:{width:0} });
   Plotly.newPlot("history", traces,
     { ...PLOT_BASE, height: 340, shapes, yaxis: { range: [0, 100] },
+      yaxis2: { overlaying: "y", side: "right", type: "log", showgrid: false,
+                tickfont: { size: 9, color: "#8b93a3" } },
       xaxis: dateRange(h.dates),
       legend: { orientation: "h", y: -0.15 } }, CFG);
 }
@@ -204,11 +211,18 @@ function renderIndicator(id) {
     `<span class="chip">z ${d.latest.zscore ?? "n/a"}</span>` +
     (d.stale ? ' <span class="badge-stale">STALE</span>' : "") +
     ` <span class="muted">last obs ${d.last_obs}</span>`;
-  Plotly.newPlot("indicator-raw",
-    [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }],
+  const rawTraces = [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }];
+  if (HISTORY.spx) {
+    rawTraces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
+                     yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
+                     hovertemplate: "%{y:,.0f}<extra>S&P 500</extra>" });
+  }
+  Plotly.newPlot("indicator-raw", rawTraces,
     { ...PLOT_BASE, height: 230, shapes: crisisShapes(),
       xaxis: dateRange(d.series.dates),
-      yaxis: { title: { text: "raw value", font: { size: 11 } } } }, CFG);
+      yaxis: { title: { text: "raw value", font: { size: 11 } } },
+      yaxis2: { overlaying: "y", side: "right", type: "log", showgrid: false,
+                tickfont: { size: 9, color: "#8b93a3" } } }, CFG);
   Plotly.newPlot("indicator-pct",
     [{ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct", line: { color: "#e0b83c", width: 1.4 } },
      crisisLabels(97)],
