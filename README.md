@@ -48,6 +48,10 @@ updated daily by GitHub Actions, with crisis-comparison context.
   also records a mid-task honesty-gate stop-and-fix on the 2019 control, and
   a nuance on reading the 1980-81 Volcker period's leverage pillar alongside,
   not instead of, the composite). Ongoing: scraper-based indicators (AAII,
-  put/call) remain manual/partial.
+  put/call) remain manual/partial. **Also added:** seven display-only "macro
+  context" indicators (CPI, core CPI, PPI, nonfarm payrolls, unemployment,
+  JOLTS job openings, and the Fed funds policy rate) - visible in the
+  indicator drill-down but excluded from pillar scores, the composite, the
+  stress gauge, analogs, the sequencer, and the backtest by design.
 
 *Monitoring context, not a trading signal.*

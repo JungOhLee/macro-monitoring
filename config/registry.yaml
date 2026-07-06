@@ -35,6 +35,14 @@ series:
   - {id: dtwexm,      source: fred, source_id: DTWEXM,      frequency: weekly,    staleness_budget_days: 36500, revision_window_days: 0, lag_days: 1}  # discontinued 2019; splice donor only
   - {id: sahmrealtime, source: fred, source_id: SAHMREALTIME, frequency: monthly, staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
   - {id: cfnai,       source: fred, source_id: CFNAI,       frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 400, lag_days: 25}
+  # ---- FRED (macro context indicators, 2026-07-06 -- display-only role, see indicators section) ----
+  - {id: cpiaucsl,    source: fred, source_id: CPIAUCSL,    frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}
+  - {id: ppiaco,      source: fred, source_id: PPIACO,      frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}
+  - {id: payems,      source: fred, source_id: PAYEMS,      frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
+  - {id: unrate,      source: fred, source_id: UNRATE,      frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
+  # JOLTS publishes ~1 month later than the rest of the employment data (payems/unrate) for
+  # the same reference month -- larger staleness budget and lag to match.
+  - {id: jtsjol,      source: fred, source_id: JTSJOL,      frequency: monthly,   staleness_budget_days: 130,  revision_window_days: 90,  lag_days: 65}
   # ---- FRED (S&P daily level; deep history seeded one-time from Yahoo ^GSPC) ----
   - {id: spx,    source: fred,  source_id: SP500,   frequency: daily, staleness_budget_days: 7,  revision_window_days: 7, lag_days: 1}
   # ---- Alpha Vantage when ALPHAVANTAGE_KEY is set, else Yahoo chart API fallback (best-effort
@@ -88,3 +96,23 @@ indicators:
   # ---- Pillar B: leverage (manual) ----
   - {id: margin_debt_yoy, name: "FINRA margin debt YoY %", pillar: leverage, role: timing, direction: normal,
      formula: yoy, inputs: [margin_debt], lag_days: 25}
+  # ---- Pillar: context (display-only, added 2026-07-06 per user request -- "essential
+  # metrics to understand market status": CPI, PPI, hiring, and the policy rate. These are
+  # ingested, scored for raw+percentile, and exported for the drill-down, but role=context
+  # EXCLUDES them from pillar scores, the composite, the confirmation-stress gauge, analog
+  # vectors (today + episode snapshots), the sequencer, the backtest, and pillar-extreme
+  # alerts -- see docs/superpowers/specs/2026-07-05-macro-monitor-design.md amendment. ----
+  - {id: cpi_yoy, name: "CPI inflation (YoY)", pillar: context, role: context, direction: normal,
+     formula: yoy, inputs: [cpiaucsl], lag_days: 14}
+  - {id: core_cpi_yoy, name: "Core CPI inflation (YoY)", pillar: context, role: context, direction: normal,
+     formula: yoy, inputs: [cpilfesl], lag_days: 14}
+  - {id: ppi_yoy, name: "PPI inflation (YoY)", pillar: context, role: context, direction: normal,
+     formula: yoy, inputs: [ppiaco], lag_days: 14}
+  - {id: payrolls_yoy, name: "Nonfarm payrolls (YoY %)", pillar: context, role: context, direction: normal,
+     formula: yoy, inputs: [payems], lag_days: 35}
+  - {id: unemployment, name: "Unemployment rate", pillar: context, role: context, direction: normal,
+     series: unrate, lag_days: 35}
+  - {id: job_openings, name: "Job openings (JOLTS)", pillar: context, role: context, direction: normal,
+     series: jtsjol, lag_days: 65}
+  - {id: fed_funds, name: "Fed funds rate (policy rate)", pillar: context, role: context, direction: normal,
+     series: fedfunds, lag_days: 3}

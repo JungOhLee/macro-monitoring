@@ -123,6 +123,42 @@ def test_export_analogs_in_latest(site, monkeypatch):
     assert payload["analogs"] is None
 
 
+def test_export_today_vector_excludes_context_indicator(site, monkeypatch):
+    # End-to-end check of the export-path exclusion: if the context indicator were
+    # wrongly folded into today's live analog vector, "i_ctx" would bring the shared-key
+    # count with `snaps` up to 8 (>= min_shared) and analogs would fire; properly
+    # excluded, shared stays at 7 and analogs must stay None.
+    import pipeline.compute.episodes as epimod
+
+    store.write_series("ctx", make_raw(with_context=True)["ctx"])
+    rows = [{"episode": "gfc", "offset_months": -6, "indicator_id": f"k{i}", "percentile": 50.0}
+            for i in range(7)]
+    rows.append({"episode": "gfc", "offset_months": -6, "indicator_id": "i_ctx", "percentile": 50.0})
+    monkeypatch.setattr(epimod, "load_snapshots", lambda: pd.DataFrame(rows))
+
+    payload = export.export_site(make_reg(with_context=True), THX)
+    assert payload["analogs"] is None
+
+
+def test_export_indicators_json_includes_context_indicator(site):
+    store.write_series("ctx", make_raw(with_context=True)["ctx"])
+    payload = export.export_site(make_reg(with_context=True), THX)
+    indicators = json.loads((site / "indicators.json").read_text())
+    assert "i_ctx" in indicators
+    entry = indicators["i_ctx"]
+    assert entry["pillar"] == "context"
+    assert entry["role"] == "context"
+    # drill-down needs both raw and percentile series/latest values, same shape as any
+    # other indicator.
+    assert entry["latest"]["value"] is not None
+    assert entry["latest"]["pct_full"] == pytest.approx(100.0, abs=0.5)
+    assert len(entry["series"]["dates"]) > 0
+    assert len(entry["pct_series"]["dates"]) > 0
+    # but it must be invisible to the payload's pillar rollups, which only cover the
+    # five real pillars from pillar_weights.
+    assert set(payload["pillars"]) == {"valuation", "leverage", "sentiment"}
+
+
 def test_export_includes_spx_overlay(site, monkeypatch):
     import pipeline.registry as registry
 

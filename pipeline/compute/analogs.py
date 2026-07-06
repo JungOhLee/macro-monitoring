@@ -5,6 +5,22 @@ import math
 import pandas as pd
 
 
+def froth_vectors(reg, result) -> dict[str, pd.Series]:
+    """Per-indicator full-window froth series keyed by indicator id, excluding any
+    indicator with empty/no froth AND every role=context indicator (display-only,
+    never compared against episode snapshots). Shared building block for both the
+    live "today" analog vector (`export.py`) and each backtest month's analog
+    vector (`backtest.py`) -- context indicators must never enter either."""
+    from pipeline.registry import context_ids
+
+    ctx = context_ids(reg)
+    return {
+        ind_id: r.froth_full
+        for ind_id, r in result.indicators.items()
+        if not r.froth_full.empty and ind_id not in ctx
+    }
+
+
 def cosine(a: dict[str, float], b: dict[str, float], min_shared: int = 8) -> float | None:
     shared = sorted(set(a) & set(b))
     if len(shared) < min_shared:

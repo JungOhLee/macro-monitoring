@@ -18,7 +18,8 @@ function regimeEdges() {
   return [bands[0].upper, bands[1].upper, bands[2].upper];
 }
 const PILLAR_LABEL = { valuation:"Valuation", leverage:"Leverage & credit",
-  liquidity:"Liquidity & monetary", sentiment:"Sentiment & speculation", macro:"Macro stress & breadth" };
+  liquidity:"Liquidity & monetary", sentiment:"Sentiment & speculation", macro:"Macro stress & breadth",
+  context:"Context (not scored)" };
 const HISTORY_TABS = [
   { key: "composite", label: "Composite" },
   { key: "valuation", label: "Valuation" },

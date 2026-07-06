@@ -10,7 +10,7 @@ from pipeline import paths
 VALID_SOURCES = ("fred", "yahoo", "manual", "shiller", "alphavantage")
 VALID_FREQ = ("daily", "weekly", "monthly", "quarterly")
 VALID_DIRECTION = ("normal", "invert")
-VALID_ROLE = ("timing", "magnitude", "confirmation")
+VALID_ROLE = ("timing", "magnitude", "confirmation", "context")
 
 
 @dataclass(frozen=True)
@@ -60,6 +60,14 @@ def load_registry(path: Path | None = None) -> Registry:
     return reg
 
 
+def context_ids(reg: Registry) -> set[str]:
+    """IDs of role=context indicators (display-only: ingested, computed, and exported for
+    the drill-down, but excluded from pillar scores, the composite, the confirmation-stress
+    gauge, analog vectors, the sequencer, and the backtest). Centralizing this lookup keeps
+    every exclusion site (episodes.build_snapshots, analogs.froth_vectors) in agreement."""
+    return {i.id for i in reg.indicators if i.role == "context"}
+
+
 def load_thresholds(path: Path | None = None) -> dict:
     return yaml.safe_load((path or paths.CONFIG / "thresholds.yaml").read_text())
 
@@ -89,7 +97,13 @@ def _validate(reg: Registry) -> None:
             errors.append(f"{i.id}: bad direction {i.direction}")
         if i.role not in VALID_ROLE:
             errors.append(f"{i.id}: bad role {i.role}")
-        if i.pillar not in reg.pillar_weights:
+        if i.role == "context":
+            # context indicators are display-only and deliberately not part of any real
+            # pillar (pillar_weights); pillar must be the sentinel "context", paired 1:1
+            # with role so a stray pillar value can't silently leak into scoring.
+            if i.pillar != "context":
+                errors.append(f"{i.id}: context role must have pillar 'context'")
+        elif i.pillar not in reg.pillar_weights:
             errors.append(f"{i.id}: unknown pillar {i.pillar}")
         if (i.series is None) == (i.formula is None):
             errors.append(f"{i.id}: exactly one of series/formula required")

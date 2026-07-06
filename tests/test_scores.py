@@ -17,7 +17,7 @@ TH = {"regime_bands": BANDS, "score_start": "2011-01-01", "alerts": {"pillar_ext
                         {"name": "confirming", "upper": 100}]}
 
 
-def make_reg(with_confirmation=False):
+def make_reg(with_confirmation=False, with_context=False):
     series = [
         Series("up", "fred", "UP", "monthly", 45, 0, 1),
         Series("down", "fred", "DOWN", "monthly", 45, 0, 1),
@@ -32,11 +32,15 @@ def make_reg(with_confirmation=False):
         series.append(Series("conf", "fred", "CONF", "monthly", 45, 0, 1))
         indicators.append(
             Indicator("i_conf", "Conf", "valuation", "confirmation", "normal", 1, series="conf"))
+    if with_context:
+        series.append(Series("ctx", "fred", "CTX", "monthly", 45, 0, 1))
+        indicators.append(
+            Indicator("i_ctx", "Ctx", "context", "context", "normal", 1, series="ctx"))
     return Registry(series=series, indicators=indicators,
                     pillar_weights={"valuation": 0.5, "leverage": 0.3, "sentiment": 0.2})
 
 
-def make_raw(with_confirmation=False):
+def make_raw(with_confirmation=False, with_context=False):
     idx = pd.date_range("2000-01-31", "2012-12-31", freq="ME")
     up = pd.Series(np.arange(1.0, len(idx) + 1), index=idx)
     down = pd.Series(-np.arange(1.0, len(idx) + 1), index=idx)
@@ -44,6 +48,8 @@ def make_raw(with_confirmation=False):
     raw = {"up": up, "down": down, "young": young}
     if with_confirmation:
         raw["conf"] = pd.Series(np.arange(1.0, len(idx) + 1), index=idx)  # always at max -> froth 100
+    if with_context:
+        raw["ctx"] = pd.Series(np.arange(1.0, len(idx) + 1) * 2.0, index=idx)  # always at max -> froth 100
     return raw
 
 
@@ -118,6 +124,50 @@ def test_stress_series_from_confirmation_only():
     res2 = scores.compute_scores(make_reg(), TH, make_raw())
     assert list(res2.stress.columns) == ["date", "window", "score"]
     assert res2.stress.empty
+
+
+def test_context_indicator_computed_but_pillars_and_composite_untouched():
+    # A context indicator's pillar ("context") is deliberately outside pillar_weights, so
+    # it must never surface in pillars/composite -- registries with and without it must
+    # yield byte-identical scored output (the honesty-gate regression this mirrors).
+    reg_ctx = make_reg(with_context=True)
+    res_ctx = scores.compute_scores(reg_ctx, TH, make_raw(with_context=True))
+    res_base = scores.compute_scores(make_reg(), TH, make_raw())
+
+    # it IS computed: present in result.indicators with both raw series and froth.
+    assert "i_ctx" in res_ctx.indicators
+    assert not res_ctx.indicators["i_ctx"].froth_full.empty
+    assert not res_ctx.indicators["i_ctx"].series.empty
+
+    # but it never contributes a pillar (pillar "context" is not in pillar_weights)...
+    pil_ctx = res_ctx.pillars[res_ctx.pillars.window == "full"]
+    pil_base = res_base.pillars[res_base.pillars.window == "full"]
+    assert "context" not in set(pil_ctx.pillar.unique())
+    assert set(pil_ctx.pillar.unique()) == set(pil_base.pillar.unique())
+    pd.testing.assert_frame_equal(
+        pil_ctx.reset_index(drop=True), pil_base.reset_index(drop=True))
+
+    # ...and the composite is identical with or without it.
+    comp_ctx = res_ctx.composite[res_ctx.composite.window == "full"].reset_index(drop=True)
+    comp_base = res_base.composite[res_base.composite.window == "full"].reset_index(drop=True)
+    pd.testing.assert_frame_equal(comp_ctx, comp_base)
+
+
+def test_context_indicator_excluded_from_stress():
+    # role=context must never leak into the confirmation-stress gauge (which aggregates
+    # role=confirmation only) -- adding a max-froth context indicator alongside a real
+    # confirmation indicator must not move the stress score at all.
+    reg_ctx = make_reg(with_confirmation=True, with_context=True)
+    raw_ctx = make_raw(with_confirmation=True, with_context=True)
+    res_ctx = scores.compute_scores(reg_ctx, TH, raw_ctx)
+
+    reg_base = make_reg(with_confirmation=True)
+    raw_base = make_raw(with_confirmation=True)
+    res_base = scores.compute_scores(reg_base, TH, raw_base)
+
+    st_ctx = res_ctx.stress[res_ctx.stress.window == "full"].reset_index(drop=True)
+    st_base = res_base.stress[res_base.stress.window == "full"].reset_index(drop=True)
+    pd.testing.assert_frame_equal(st_ctx, st_base)
 
 
 def test_append_scores_is_append_only(tmp_path, monkeypatch):

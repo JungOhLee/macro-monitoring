@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from pipeline import paths, store
-from pipeline.compute.analogs import top_analogs
+from pipeline.compute.analogs import froth_vectors, top_analogs
 from pipeline.compute.episodes import load_snapshots
 from pipeline.compute.scores import compute_scores
 from pipeline.compute.sequencer import evaluate_stages, new_state, update_state
@@ -98,7 +98,9 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
     n_high_out, n_high_in = 0, 0
     peaks = [pd.Timestamp(e["peak"]) for e in epi_cfg["episodes"] if not e.get("control")]
     if not snaps.empty:
-        froth = {i: r.froth_full for i, r in result.indicators.items() if not r.froth_full.empty}
+        # context (display-only) indicators are excluded from every monthly analog
+        # vector, same as from episode snapshots and today's live vector.
+        froth = froth_vectors(reg, result)
         sims = monthly_top1_similarities(months, snaps, froth)
         for m, sim in zip(months, sims):
             if sim is not None and sim >= ANALOG_HIGH_SIM_THRESHOLD:

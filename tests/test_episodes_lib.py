@@ -58,6 +58,19 @@ def test_confirmation_excluded_from_pillar_scores():
     assert val_with_conf == pytest.approx(val_no_conf)
 
 
+def test_build_snapshots_excludes_context_role():
+    # role=context indicators (display-only) must never enter the episode snapshot
+    # library -- unlike role=confirmation, which shows up in raw snapshots and is only
+    # excluded when reweighting into pillar scores (see test_confirmation_excluded_from_pillar_scores).
+    reg = make_reg(with_context=True)
+    raw = make_raw(with_context=True)
+    snaps = epi.build_snapshots(reg, TH, raw, EPI_CFG)
+    assert "i_ctx" not in snaps.indicator_id.unique()
+    # sanity: the context indicator does qualify (10y+ history, like i_up) and would show
+    # up if the exclusion were missing -- confirm i_up (same shape) IS present as a control.
+    assert "i_up" in snaps.indicator_id.unique()
+
+
 def test_marker_only_episodes_excluded_from_snapshots():
     reg = make_reg()
     cfg = {

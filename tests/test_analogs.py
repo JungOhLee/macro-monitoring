@@ -1,7 +1,20 @@
 import pandas as pd
 import pytest
 
-from pipeline.compute import analogs
+from pipeline.compute import analogs, scores
+from tests.test_scores import TH, make_raw, make_reg
+
+
+def test_froth_vectors_excludes_context_indicators():
+    # froth_vectors() is the shared building block behind both today's live analog
+    # vector (export.py) and each backtest month's vector (backtest.py) -- role=context
+    # indicators must never appear in its output even though they qualify and compute
+    # froth just like any other indicator.
+    reg = make_reg(with_context=True)
+    res = scores.compute_scores(reg, TH, make_raw(with_context=True))
+    fv = analogs.froth_vectors(reg, res)
+    assert "i_ctx" not in fv
+    assert set(fv) == {"i_up", "i_down"}  # i_young gated out (< 10y history)
 
 
 def test_cosine_identical_and_orthogonalish():

@@ -4,11 +4,12 @@ import pandas as pd
 
 from pipeline import paths
 from pipeline.compute.scores import compute_scores
-from pipeline.registry import Registry
+from pipeline.registry import Registry, context_ids
 
 
 def build_snapshots(reg: Registry, thresholds: dict, raw: dict, epi_cfg: dict) -> pd.DataFrame:
     result = compute_scores(reg, thresholds, raw)
+    ctx = context_ids(reg)
     rows = []
     for ep in epi_cfg["episodes"]:
         if ep.get("library") is False:
@@ -17,6 +18,8 @@ def build_snapshots(reg: Registry, thresholds: dict, raw: dict, epi_cfg: dict) -
         for off in epi_cfg["offsets_months"]:
             snap_date = peak + pd.DateOffset(months=off)
             for ind_id, ir in result.indicators.items():
+                if ind_id in ctx:
+                    continue  # context (display-only) indicators never enter the episode library
                 if ir.froth_full.empty:
                     continue
                 val = ir.froth_full.asof(snap_date)

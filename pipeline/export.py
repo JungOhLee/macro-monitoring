@@ -39,7 +39,7 @@ def _atomic_write(fp, obj) -> None:
 
 
 def export_site(reg: Registry, thresholds: dict) -> dict:
-    from pipeline.compute.analogs import top_analogs
+    from pipeline.compute.analogs import froth_vectors, top_analogs
     from pipeline.compute.episodes import firing_timeline, load_snapshots, pillar_scores_from_snapshots
     from pipeline.compute.sequencer import load_state
     from pipeline.registry import load_episodes
@@ -51,10 +51,9 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     epi_cfg = load_episodes()
     snaps = load_snapshots()
 
-    today_vec = {
-        ind_id: float(r.froth_full.iloc[-1])
-        for ind_id, r in result.indicators.items() if not r.froth_full.empty
-    }
+    # context (display-only) indicators are excluded from today's analog vector, same as
+    # from episode snapshots and the backtest's monthly vectors -- see froth_vectors().
+    today_vec = {ind_id: float(s.iloc[-1]) for ind_id, s in froth_vectors(reg, result).items()}
     analog_top = top_analogs(today_vec, snaps) if not snaps.empty else []
     ep_names = {e["id"]: e["name"] for e in epi_cfg["episodes"]}
     analogs_payload = None
@@ -100,7 +99,11 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     per_pillar_active = {p: 0 for p in reg.pillar_weights}
     for ind in reg.indicators:
         r = result.indicators.get(ind.id)
-        if ind.role != "confirmation" and r is not None and not r.froth_full.empty:
+        # context indicators sit outside pillar_weights entirely (pillar "context" is not
+        # a key of per_pillar_active) -- guard on membership, not just role, so a future
+        # non-pillar-scored role can't KeyError here either.
+        if (ind.role != "confirmation" and ind.pillar in per_pillar_active
+                and r is not None and not r.froth_full.empty):
             per_pillar_active[ind.pillar] += 1
     for p, w in reg.pillar_weights.items():
         rows = result.pillars[(result.pillars.pillar == p)]
