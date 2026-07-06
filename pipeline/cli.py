@@ -7,7 +7,7 @@ import sys
 import pandas as pd
 from dotenv import load_dotenv
 
-from pipeline import store
+from pipeline import paths, store
 from pipeline.ingest import run_ingest, stale_series
 from pipeline.registry import load_registry
 
@@ -21,23 +21,39 @@ def _api_key() -> str:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    from pipeline.compute.scores import append_scores, compute_scores
+    from pipeline.registry import load_thresholds
+
     reg = load_registry()
     fresh = run_ingest(reg, api_key=_api_key())
     failed = [k for k, v in fresh.items() if not v["fetch_ok"]]
     print(f"ingest: {len(reg.series) - len(failed)}/{len(reg.series)} series ok"
           + (f"; failed: {', '.join(failed)}" if failed else ""))
+    raw = {s.id: store.read_series(s.id) for s in reg.series}
+    result = compute_scores(reg, load_thresholds(), raw)
+    n_comp, n_pil = append_scores(result)
+    latest = result.composite[result.composite.window == "full"].iloc[-1]
+    print(f"scores: +{n_comp} composite rows, +{n_pil} pillar rows; "
+          f"latest {latest['date']:%Y-%m-%d} composite={latest['score']} ({latest['regime']})")
     return 0
 
 
 def cmd_status(args: argparse.Namespace) -> int:
+    import pandas as pd
+
     reg = load_registry()
     fresh = store.load_freshness()
-    now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
     stale = set(stale_series(reg, fresh, now))
     for s in reg.series:
         rec = fresh.get(s.id, {})
         flag = "STALE" if s.id in stale else "ok"
         print(f"{s.id:16} {rec.get('last_obs') or '-':12} {flag}")
+    comp_fp = paths.DATA_SCORES / "composite.csv"
+    if comp_fp.exists():
+        df = pd.read_csv(comp_fp)
+        last = df[df.window == "full"].iloc[-1]
+        print(f"\ncomposite (full): {last['score']} ({last['regime']}) as of {last['date']}")
     return 1 if stale else 0
 
 

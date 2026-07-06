@@ -94,3 +94,14 @@ def test_asof_align_skips_internal_nan():
 def test_yoy_empty_input():
     out = derived.FORMULAS["yoy"](pd.Series(dtype=float, index=pd.DatetimeIndex([])))
     assert out.empty
+
+
+def test_yoy_leap_day_collision():
+    # Feb 28 and Feb 29 of a leap year both roll back to Feb 28 of the (non-leap)
+    # prior year under DateOffset(years=1) -> prior_dates has a duplicate. Must
+    # not raise "cannot reindex on an axis with duplicate labels".
+    idx = pd.to_datetime(["2023-02-27", "2023-02-28", "2024-02-27", "2024-02-28", "2024-02-29"])
+    s = pd.Series([100.0, 101.0, 110.0, 111.0, 112.0], index=idx)
+    out = derived.FORMULAS["yoy"](s)
+    assert out["2024-02-28"] == pytest.approx(111.0 / 101.0 * 100 - 100)
+    assert out["2024-02-29"] == pytest.approx(112.0 / 101.0 * 100 - 100)  # ffill from 2023-02-28

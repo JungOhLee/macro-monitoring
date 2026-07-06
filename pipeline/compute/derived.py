@@ -20,7 +20,11 @@ def _yoy(s: pd.Series) -> pd.Series:
     if s.empty:
         return pd.Series(dtype=float, index=pd.DatetimeIndex([]))
     prior_dates = s.index - pd.DateOffset(years=1)
-    prior = s.reindex(s.index.union(prior_dates)).sort_index().ffill().reindex(prior_dates)
+    # prior_dates can collide (e.g. both Feb 28 and Feb 29 of a leap year roll back
+    # to Feb 28 of a non-leap prior year); dedupe before building the union/ffill
+    # source so the intermediate index stays unique (the final reindex target
+    # below, `prior_dates`, is allowed to contain duplicates).
+    prior = s.reindex(s.index.union(prior_dates.unique())).sort_index().ffill().reindex(prior_dates)
     out = (s.to_numpy() / prior.to_numpy() - 1.0) * 100.0
     result = pd.Series(out, index=s.index)
     # drop points with no observation at/before one year earlier
