@@ -213,3 +213,25 @@ def test_alphavantage_both_fail_reports_failure_and_scrubs_av_key(tmp_path, monk
     fresh = ingest.run_ingest(make_av_reg(), api_key="K", av_api_key="AVSECRET", now=pd.Timestamp("2026-07-05"))
     assert fresh["av"]["fetch_ok"] is False
     assert "AVSECRET" not in json.dumps(fresh)
+
+
+def test_alphavantage_both_fail_error_carries_both_reasons(tmp_path, monkeypatch):
+    """When keyed and fallback both fail, the persisted error must name both
+    (sanitized) reasons — otherwise the keyed failure is invisible in the
+    committed freshness.json and CI logs, and undiagnosable."""
+    monkeypatch.setattr(store.paths, "DATA_RAW", tmp_path / "raw")
+    monkeypatch.setattr(store.paths, "DATA_STATE", tmp_path / "state")
+
+    def failing_av(sid, key):
+        raise RuntimeError(f"Alpha Vantage Information response for {sid}")
+
+    def failing_yahoo(sid):
+        raise RuntimeError(f"Yahoo HTTP 429 for {sid}")
+
+    monkeypatch.setattr(ingest, "fetch_alphavantage", failing_av)
+    monkeypatch.setattr(ingest, "fetch_yahoo", failing_yahoo)
+    fresh = ingest.run_ingest(make_av_reg(source_id="RSP"), api_key="K", av_api_key="AVSECRET", now=pd.Timestamp("2026-07-05"))
+    err = fresh["av"]["error"]
+    assert "Alpha Vantage Information response for RSP" in err
+    assert "Yahoo HTTP 429 for RSP" in err
+    assert "AVSECRET" not in err

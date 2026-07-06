@@ -20,13 +20,25 @@ def _fetch_alphavantage_then_yahoo(source_id: str, av_api_key: str | None) -> pd
     """Keyed-then-fallback dispatch: no key -> straight to Yahoo (current
     behavior, unchanged); key present -> try Alpha Vantage first, and on ANY
     failure fall back to Yahoo. A fallback success is a success -- there is
-    no separate failure counted for the keyed miss."""
+    no separate failure counted for the keyed miss, but the miss is logged,
+    and if the fallback ALSO fails the combined error names both reasons
+    (keyed.py messages are static labels that never carry the key, and the
+    final raise sits outside any except block so __context__ stays None)."""
+    av_failure = None
     if av_api_key:
         try:
             return fetch_alphavantage(source_id, av_api_key)
-        except Exception:
-            pass
-    return fetch_yahoo(_YAHOO_SYMBOL_OVERRIDES.get(source_id, source_id))
+        except Exception as exc:
+            av_failure = str(exc)
+    if av_failure is not None:
+        print(f"ingest: alphavantage miss for {source_id} ({av_failure}); trying yahoo")
+    yahoo_failure = None
+    try:
+        return fetch_yahoo(_YAHOO_SYMBOL_OVERRIDES.get(source_id, source_id))
+    except Exception as exc:
+        yahoo_failure = f"{type(exc).__name__}: {exc}"
+    msg = yahoo_failure if av_failure is None else f"{av_failure}; yahoo fallback: {yahoo_failure}"
+    raise RuntimeError(msg)
 
 
 def run_ingest(
