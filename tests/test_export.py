@@ -62,6 +62,16 @@ def test_downsample_keeps_last():
     assert out.iloc[-1] == s.iloc[-1]
 
 
+def test_export_writes_episodes_json(site, monkeypatch, tmp_path):
+    import pipeline.compute.episodes as epimod
+    monkeypatch.setattr(epimod, "load_snapshots", lambda: pd.DataFrame(
+        [{"episode": "gfc", "offset_months": -6, "indicator_id": "i_up", "percentile": 91.0}]))
+    export.export_site(make_reg(), THX)
+    epi = json.loads((site / "episodes.json").read_text())
+    assert epi["snapshots"]["gfc"]["-6"]["i_up"] == 91.0
+    assert epi["timeline90"]["gfc"]["i_up"] == -6
+
+
 def test_downsample_never_exceeds_max():
     for n in (999, 1000, 1001, 2000, 2500, 3000, 5000, 10000):
         s = pd.Series(range(n), index=pd.date_range("1990-01-01", periods=n))

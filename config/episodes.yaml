@@ -1,0 +1,6 @@
+episodes:
+  - {id: dotcom,    name: "Dot-com bust",            peak: "2000-03-24"}
+  - {id: gfc,       name: "Global Financial Crisis", peak: "2007-10-09"}
+  - {id: covid,     name: "COVID crash",             peak: "2020-02-19", control: true}
+  - {id: postcovid, name: "Post-COVID unwind",       peak: "2022-01-03"}
+offsets_months: [-24, -18, -12, -9, -6, -3, -1, 0, 6, 12]

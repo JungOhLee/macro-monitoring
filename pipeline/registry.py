@@ -64,6 +64,10 @@ def load_thresholds(path: Path | None = None) -> dict:
     return yaml.safe_load((path or paths.CONFIG / "thresholds.yaml").read_text())
 
 
+def load_episodes(path: Path | None = None) -> dict:
+    return yaml.safe_load((path or paths.CONFIG / "episodes.yaml").read_text())
+
+
 def _validate(reg: Registry) -> None:
     errors: list[str] = []
     sids = [s.id for s in reg.series]

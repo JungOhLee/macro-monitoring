@@ -76,6 +76,19 @@ def cmd_alerts(args: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def cmd_rebuild_episodes(args: argparse.Namespace) -> int:
+    from pipeline import store
+    from pipeline.compute.episodes import build_snapshots, save_snapshots
+    from pipeline.registry import load_episodes, load_thresholds
+
+    reg = load_registry()
+    raw = {s.id: store.read_series(s.id) for s in reg.series}
+    snaps = build_snapshots(reg, load_thresholds(), raw, load_episodes())
+    save_snapshots(snaps)
+    print(f"episodes: {snaps.episode.nunique()} episodes, {len(snaps)} snapshot rows")
+    return 0
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     from pipeline.export import export_site, render_episodes
     from pipeline.registry import load_thresholds
@@ -95,6 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("run").set_defaults(fn=cmd_run)
     sub.add_parser("status").set_defaults(fn=cmd_status)
     sub.add_parser("export").set_defaults(fn=cmd_export)
+    sub.add_parser("rebuild-episodes").set_defaults(fn=cmd_rebuild_episodes)
     ap = sub.add_parser("alerts")
     ap.add_argument("--test", action="store_true")
     ap.set_defaults(fn=cmd_alerts)

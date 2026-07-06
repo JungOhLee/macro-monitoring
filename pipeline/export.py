@@ -39,9 +39,15 @@ def _atomic_write(fp, obj) -> None:
 
 
 def export_site(reg: Registry, thresholds: dict) -> dict:
+    from pipeline.compute.episodes import firing_timeline, load_snapshots, pillar_scores_from_snapshots
+    from pipeline.registry import load_episodes
+
     raw = {s.id: store.read_series(s.id) for s in reg.series}
     result = compute_scores(reg, thresholds, raw)
     as_of = max(s.index.max() for s in raw.values() if not s.empty)
+
+    epi_cfg = load_episodes()
+    snaps = load_snapshots()
     fresh = store.load_freshness()
     # Offline fallback: only backfill when freshness.json is entirely empty
     # (true offline case). When freshness.json exists and is non-empty, use it as-is.
@@ -156,9 +162,33 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
             "pct_series": _series_json(r.froth_full),
         }
 
+    # ---- episodes.json ----
+    episodes_payload: dict = {
+        "episodes": epi_cfg["episodes"],
+        "offsets": epi_cfg["offsets_months"],
+        "snapshots": {}, "pillar_scores": {}, "timeline80": {}, "timeline90": {},
+    }
+    if not snaps.empty:
+        for ep_id, grp in snaps.groupby("episode"):
+            episodes_payload["snapshots"][ep_id] = {
+                str(off): dict(zip(g.indicator_id, g.percentile))
+                for off, g in grp.groupby("offset_months")
+            }
+        ps = pillar_scores_from_snapshots(reg, snaps)
+        for ep_id, grp in ps.groupby("episode"):
+            episodes_payload["pillar_scores"][ep_id] = {
+                str(off): dict(zip(g.pillar, g.score))
+                for off, g in grp.groupby("offset_months")
+            }
+        for level, key in ((80, "timeline80"), (90, "timeline90")):
+            tl = firing_timeline(snaps, level)
+            for ep_id, grp in tl.groupby("episode"):
+                episodes_payload[key][ep_id] = dict(zip(grp.indicator_id, grp.first_offset.astype(int)))
+
     _atomic_write(paths.SITE_DATA / "latest.json", latest)
     _atomic_write(paths.SITE_DATA / "history.json", history)
     _atomic_write(paths.SITE_DATA / "indicators.json", indicators)
+    _atomic_write(paths.SITE_DATA / "episodes.json", episodes_payload)
     return latest
 
 
