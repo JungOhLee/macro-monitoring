@@ -43,7 +43,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
     reg = load_registry()
     fresh = store.load_freshness()
-    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
     stale = set(stale_series(reg, fresh, now))
     for s in reg.series:
         rec = fresh.get(s.id, {})
@@ -69,7 +69,7 @@ def cmd_alerts(args: argparse.Namespace) -> int:
                        "Verifying the alert email path. Close me.")], cooldown_days=0)
         return 1 if failed else 0
     reg = load_registry()
-    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    now = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
     found = evaluate_alerts(reg, th, now)
     failed = deliver(found, th["alerts"]["cooldown_days"])
     print(f"alerts: {len(found)} rule(s) fired")

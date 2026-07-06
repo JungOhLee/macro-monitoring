@@ -57,19 +57,36 @@ def evaluate_alerts(reg: Registry, thresholds: dict, now: pd.Timestamp) -> list[
                     f"The **{pillar}** pillar score crossed above {level}: {prev} -> {cur}.",
                 ))
 
-    stale = stale_series(reg, store.load_freshness(), now)
-    if stale:
+    freshness = store.load_freshness()
+    stale = stale_series(reg, freshness, now)
+    total = len(freshness)
+    ok = sum(1 for rec in freshness.values() if rec.get("fetch_ok"))
+    fetch_failed: list[str] = []
+    if total and ok / total < 0.8:
+        fetch_failed = sorted(sid for sid, rec in freshness.items() if not rec.get("fetch_ok"))
+
+    if stale or fetch_failed:
+        title_parts, body_parts = [], []
+        if stale:
+            title_parts.append(f"{len(stale)} stale series")
+            body_parts.append("Series past their staleness budget: " + ", ".join(stale))
+        if fetch_failed:
+            title_parts.append(f"only {ok}/{total} fetch attempts succeeded")
+            body_parts.append(
+                f"Data health: only {ok}/{total} fetch attempts succeeded. "
+                "Failed series: " + ", ".join(fetch_failed)
+            )
         out.append(Alert(
             "data-health",
-            f"Data health: {len(stale)} stale series",
-            "Series past their staleness budget: " + ", ".join(stale),
+            "Data health: " + "; ".join(title_parts),
+            "\n".join(body_parts),
         ))
     return out
 
 
 def deliver(alerts: list[Alert], cooldown_days: int) -> int:
     in_ci = bool(os.environ.get("GITHUB_ACTIONS"))
-    since = (pd.Timestamp.utcnow().tz_localize(None) - pd.Timedelta(days=cooldown_days)).strftime("%Y-%m-%d")
+    since = (pd.Timestamp.now(tz="UTC").tz_localize(None) - pd.Timedelta(days=cooldown_days)).strftime("%Y-%m-%d")
     failed = 0
     for a in alerts:
         if not in_ci:

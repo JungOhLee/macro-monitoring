@@ -57,6 +57,36 @@ def test_stale_series_alert(env):
     assert "s1" in out[0].body
 
 
+def reg_three():
+    return Registry(series=[Series("s1", "fred", "S1", "daily", 7, 0, 1),
+                            Series("s2", "fred", "S2", "daily", 7, 0, 1),
+                            Series("s3", "fred", "S3", "daily", 7, 0, 1)],
+                    indicators=[], pillar_weights={"valuation": 1.0})
+
+
+def test_fetch_failure_rate_alert(env):
+    write_scores(env,
+        [["2026-07-03", "full", 50.0, "warm"]],
+        [["2026-07-03", "full", "valuation", 50.0]])
+    now = pd.Timestamp("2026-07-05")
+
+    store.save_freshness({
+        "s1": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-04", "error": None},
+        "s2": {"last_fetch": "x", "fetch_ok": False, "last_obs": "2026-07-04", "error": "boom"},
+        "s3": {"last_fetch": "x", "fetch_ok": False, "last_obs": "2026-07-04", "error": "boom"},
+    })
+    out = alerts.evaluate_alerts(reg_three(), TH, now)
+    assert [a.label for a in out] == ["data-health"]
+    assert "s2" in out[0].body and "s3" in out[0].body
+
+    store.save_freshness({
+        "s1": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-04", "error": None},
+        "s2": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-04", "error": None},
+        "s3": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-04", "error": None},
+    })
+    assert alerts.evaluate_alerts(reg_three(), TH, now) == []
+
+
 def test_deliver_local_prints_not_calls_gh(env, monkeypatch, capsys):
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     called = []

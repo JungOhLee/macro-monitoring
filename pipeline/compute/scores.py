@@ -110,7 +110,7 @@ def compute_scores(
     )
 
 
-def _append(fp, df: pd.DataFrame, key_cols: list[str]) -> int:
+def _append(fp, df: pd.DataFrame) -> int:
     fp.parent.mkdir(parents=True, exist_ok=True)
     existed = fp.exists()
     if existed:
@@ -129,7 +129,7 @@ def _append(fp, df: pd.DataFrame, key_cols: list[str]) -> int:
 
 def append_scores(result: ScoreResult) -> tuple[int, int]:
     n_comp = _append(paths.DATA_SCORES / "composite.csv",
-                     result.composite.sort_values(["date", "window"]), ["date", "window"])
+                     result.composite.sort_values(["date", "window"]))
     n_pil = _append(paths.DATA_SCORES / "pillars.csv",
-                    result.pillars.sort_values(["date", "window", "pillar"]), ["date", "window", "pillar"])
+                    result.pillars.sort_values(["date", "window", "pillar"]))
     return n_comp, n_pil
