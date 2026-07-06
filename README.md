@@ -17,8 +17,14 @@ updated daily by GitHub Actions, with crisis-comparison context.
   yourself: put a free FRED key in `.env` (`FRED_API_KEY=...`) and run
   `python -m pipeline run && python -m pipeline export`.
 - **Status:** Phase 1-2 complete (scoring, dashboard, alerts, narrative drafts).
-  Phase 3 adds the episode library, analog similarity, sequencing state machine,
-  margin debt (manual-source), and backtest. Phase 4 adds scraper-based
-  indicators (AAII, put/call).
+  **Phase 3 complete:** role-aware composite + stress gauge, analog similarity
+  with SVG radar, pre-crisis sequence tracker,
+  [backtest page](https://jungohlee.github.io/macro-monitoring/backtest.html)
+  with validation criteria and base rates, auto-generated indicator firing
+  timelines on episode pages, and margin-debt data (FINRA manual-source
+  import). Honest caveat: backtest validation currently passes 1 of 4
+  criteria (postcovid), with documented reasons for the other three - see
+  the design doc §13 note. Phase 4 adds scraper-based indicators (AAII,
+  put/call) and threshold tuning against the backtest.
 
 *Monitoring context, not a trading signal.*

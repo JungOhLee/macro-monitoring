@@ -44,3 +44,5 @@ a { color:#6ea8fe; }
 .stage.fired { border-color:var(--bubble); color:var(--text); background:rgba(214,69,69,.12); }
 .stage.lapsed { border-color:var(--warm); opacity:.6; }
 .stage.nodata { border-style:dashed; }
+article table { width:100%; font-size:.85rem; border-collapse:collapse; margin:10px 0; }
+article td, article th { padding:4px 8px; border-bottom:1px solid var(--line); text-align:left; }

@@ -199,6 +199,7 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
         for level, key in ((80, "timeline80"), (90, "timeline90")):
             tl = firing_timeline(snaps, level)
             for ep_id, grp in tl.groupby("episode"):
+                grp = grp.sort_values(["first_offset", "indicator_id"])
                 episodes_payload[key][ep_id] = dict(zip(grp.indicator_id, grp.first_offset.astype(int)))
 
     _atomic_write(paths.SITE_DATA / "latest.json", latest)
@@ -234,7 +235,7 @@ def _timeline_html(ep_id: str) -> str:
     rows_html = []
     for level in (80, 90):
         tl = firing_timeline(snaps, level)
-        tl = tl[tl.episode == ep_id].sort_values("first_offset")
+        tl = tl[tl.episode == ep_id].sort_values(["first_offset", "indicator_id"])
         for r in tl.itertuples(index=False):
             rows_html.append(
                 f"<tr><td>{names.get(r.indicator_id, r.indicator_id)}</td>"
@@ -244,7 +245,10 @@ def _timeline_html(ep_id: str) -> str:
     return ("<h2>Indicator timeline (auto-generated)</h2>"
             "<p class='muted'>First snapshot offset at which each indicator crossed the given "
             "froth percentile, from the episode library. Sparse for early episodes where "
-            "fewer indicators have 10y of history.</p>"
+            "fewer indicators have 10y of history. Fixed calendar offsets can capture "
+            "unrelated stress episodes that fell inside the window (e.g. the 2018 "
+            "'Volmageddon' and late-2019 repo stress appear in the COVID lookback) — read "
+            "timing rows together with the narrative above.</p>"
             "<table>" + "".join(rows_html) + "</table>")
 
 

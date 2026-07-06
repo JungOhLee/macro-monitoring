@@ -39,7 +39,7 @@ def firing_timeline(snaps: pd.DataFrame, level: float = 80) -> pd.DataFrame:
     hot = snaps[snaps.percentile >= level]
     out = (hot.groupby(["episode", "indicator_id"])["offset_months"]
               .min().reset_index().rename(columns={"offset_months": "first_offset"}))
-    return out
+    return out.sort_values(["first_offset", "indicator_id"]).reset_index(drop=True)
 
 
 def save_snapshots(snaps: pd.DataFrame) -> None:

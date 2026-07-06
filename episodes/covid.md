@@ -23,6 +23,7 @@ warning. VIX went 15 -> 82 in four weeks - pure confirmation, zero anticipation.
 - Composite score in Jan 2020: mid-range. Correctly "not engaged".
 - Stage sequence: stages 1-5 had not fired as a chain.
 - The crash and recovery were both policy-scale events, not cycle-scale.
+- The auto-generated table below shows some pre-peak firings (breadth, credit, curve at T-24 to T-6): those reflect the 2018-19 late-cycle stress episodes inside the lookback window, not advance warning of the pandemic itself.
 
 ## Lessons for the monitor
 This episode defines the false-positive test: the sequencer must stay
