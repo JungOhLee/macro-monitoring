@@ -55,6 +55,8 @@ def test_http_error_sanitized(monkeypatch):
         fred.fetch_fred("XXX", "SECRETKEY")
     assert "api_key" not in str(excinfo.value)
     assert "403" in str(excinfo.value)
+    assert "SECRETKEY" not in str(excinfo.value)
+    assert excinfo.value.__context__ is None
 
 
 def test_connection_error_sanitized(monkeypatch):
@@ -70,3 +72,19 @@ def test_connection_error_sanitized(monkeypatch):
         fred.fetch_fred("X", "TOPSECRET")
     assert "TOPSECRET" not in str(excinfo.value)
     assert excinfo.value.__cause__ is None
+    assert excinfo.value.__context__ is None
+
+
+def test_non_json_body_sanitized(monkeypatch):
+    class NonJsonResp(FakeResp):
+        def json(self):
+            raise ValueError("Expecting value")
+
+    monkeypatch.setattr(
+        fred.requests, "get", lambda *a, **k: NonJsonResp({}, status=200)
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        fred.fetch_fred("XXX", "SECRETKEY")
+    assert "non-JSON" in str(excinfo.value)
+    assert "SECRETKEY" not in str(excinfo.value)
+    assert excinfo.value.__context__ is None

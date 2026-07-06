@@ -7,6 +7,8 @@ API_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 
 def fetch_fred(source_id: str, api_key: str) -> pd.Series:
+    failure = None
+    resp = None
     try:
         resp = requests.get(
             API_URL,
@@ -19,10 +21,18 @@ def fetch_fred(source_id: str, api_key: str) -> pd.Series:
             timeout=30,
         )
     except requests.RequestException as exc:
-        raise RuntimeError(f"FRED request failed for {source_id}: {type(exc).__name__}") from None
-    if resp.status_code != 200:
-        raise RuntimeError(f"FRED HTTP {resp.status_code} for {source_id}")
-    obs = resp.json().get("observations", [])
+        failure = f"FRED request failed for {source_id}: {type(exc).__name__}"
+    if failure is None and resp.status_code != 200:
+        failure = f"FRED HTTP {resp.status_code} for {source_id}"
+    payload = None
+    if failure is None:
+        try:
+            payload = resp.json()
+        except ValueError:
+            failure = f"FRED returned non-JSON body for {source_id}"
+    if failure is not None:
+        raise RuntimeError(failure)
+    obs = payload.get("observations", [])
     dates, values = [], []
     for o in obs:
         if o["value"] == ".":
