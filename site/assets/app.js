@@ -171,7 +171,7 @@ function renderHistory() {
   if (HISTORY.spx) {
     traces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
                   yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
-                  hovertemplate: "%{y:,.0f}<extra>S&P 500</extra>" });
+                  hovertemplate: "%{x|%Y-%m-%d} · %{y:,.0f}<extra>S&P 500</extra>" });
   }
   traces.push(crisisLabels(97));
   const shapes = crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
@@ -215,7 +215,7 @@ function renderIndicator(id) {
   if (HISTORY.spx) {
     rawTraces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
                      yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
-                     hovertemplate: "%{y:,.0f}<extra>S&P 500</extra>" });
+                     hovertemplate: "%{x|%Y-%m-%d} · %{y:,.0f}<extra>S&P 500</extra>" });
   }
   Plotly.newPlot("indicator-raw", rawTraces,
     { ...PLOT_BASE, height: 230, shapes: crisisShapes(),
