@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from pipeline import alerts, store
+from pipeline.compute import sequencer
 from pipeline.registry import Registry, Series
 
 TH = {"regime_bands": [{"name": "cool", "upper": 40}, {"name": "warm", "upper": 70},
@@ -85,6 +86,50 @@ def test_fetch_failure_rate_alert(env):
         "s3": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-04", "error": None},
     })
     assert alerts.evaluate_alerts(reg_three(), TH, now) == []
+
+
+def make_seq_state(as_of, stage_overrides):
+    st = sequencer.new_state()
+    st["as_of"] = as_of
+    st["engaged"] = True
+    st["current_stage"] = max(int(n) for n in stage_overrides)
+    for n_str, overrides in stage_overrides.items():
+        st["stages"][n_str].update(overrides)
+    return st
+
+
+def test_stage_alert_within_recency_window_emitted(env):
+    # as_of is 3 days after fired_date (e.g. weekend/holiday slip in a local run) -> still delivered
+    state = make_seq_state("2026-07-06", {
+        "1": {"fired": True, "fired_date": "2026-07-03", "lapsed": False},
+        "3": {"fired": True, "fired_date": "2026-07-03", "lapsed": False},
+    })
+    sequencer.save_state(state)
+    out = alerts.evaluate_alerts(reg_one(), TH, pd.Timestamp("2026-07-06"))
+    labels = [a.label for a in out]
+    assert "alert:stage-1" in labels
+    assert "alert:stage-3" in labels
+
+
+def test_stage_alert_outside_recency_window_not_emitted(env):
+    # as_of is 10 days after fired_date -> outside the bounded window, no alert
+    store.save_freshness({"s1": {"last_fetch": "x", "fetch_ok": True, "last_obs": "2026-07-13", "error": None}})
+    state = make_seq_state("2026-07-13", {
+        "1": {"fired": True, "fired_date": "2026-07-03", "lapsed": False},
+    })
+    sequencer.save_state(state)
+    out = alerts.evaluate_alerts(reg_one(), TH, pd.Timestamp("2026-07-13"))
+    assert [a.label for a in out] == []
+
+
+def test_stage_alert_lapsed_not_emitted(env):
+    # recent fired_date but stage has since lapsed -> no alert
+    state = make_seq_state("2026-07-06", {
+        "1": {"fired": True, "fired_date": "2026-07-03", "lapsed": True},
+    })
+    sequencer.save_state(state)
+    out = alerts.evaluate_alerts(reg_one(), TH, pd.Timestamp("2026-07-06"))
+    assert [a.label for a in out] == []
 
 
 def test_deliver_local_prints_not_calls_gh(env, monkeypatch, capsys):

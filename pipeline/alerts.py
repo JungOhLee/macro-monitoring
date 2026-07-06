@@ -60,14 +60,19 @@ def evaluate_alerts(reg: Registry, thresholds: dict, now: pd.Timestamp) -> list[
     from pipeline.compute.sequencer import load_state
     seq_state = load_state()
     if seq_state.get("as_of"):
+        as_of_ts = pd.Timestamp(seq_state["as_of"])
         for n_str, st in seq_state["stages"].items():
-            if st.get("fired") is True and st.get("fired_date") == seq_state["as_of"] and not st.get("lapsed"):
-                out.append(Alert(
-                    f"alert:stage-{n_str}",
-                    f"Sequence stage {n_str} fired",
-                    f"Pre-crisis sequence stage {n_str} fired on {seq_state['as_of']}. "
-                    f"Engaged: {seq_state['engaged']}, current stage: {seq_state['current_stage']}.",
-                ))
+            fd = st.get("fired_date")
+            if st.get("fired") is True and not st.get("lapsed") and fd:
+                gap = (as_of_ts - pd.Timestamp(fd)).days
+                if 0 <= gap <= 5:  # bounded window: covers weekend/holiday/missed-run slips;
+                    # < cooldown_days=7 so the per-label issue cooldown dedupes repeats
+                    out.append(Alert(
+                        f"alert:stage-{n_str}",
+                        f"Sequence stage {n_str} fired",
+                        f"Pre-crisis sequence stage {n_str} fired on {fd}. "
+                        f"Engaged: {seq_state['engaged']}, current stage: {seq_state['current_stage']}.",
+                    ))
 
     freshness = store.load_freshness()
     stale = stale_series(reg, freshness, now)
