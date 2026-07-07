@@ -29,6 +29,22 @@ def apply_lag(s: pd.Series, lag_days: int) -> pd.Series:
     return out
 
 
+def forward_returns(spx_m: pd.Series, horizon_months: int) -> list[float | None]:
+    """Simple S&P price return over the next `horizon_months` entries of a monthly
+    (BME-indexed) series, as percent x100 rounded to 2dp; None where the horizon runs
+    past the end of the data or either endpoint is missing. Positional shift, not
+    calendar arithmetic -- the input is already one row per month-end."""
+    arr = spx_m.to_numpy(dtype=float)
+    out: list[float | None] = []
+    for i in range(len(arr)):
+        j = i + horizon_months
+        if j >= len(arr) or pd.isna(arr[i]) or pd.isna(arr[j]):
+            out.append(None)
+        else:
+            out.append(round((arr[j] / arr[i] - 1.0) * 100.0, 2))
+    return out
+
+
 def evaluate_criteria(stage: pd.Series, engaged: pd.Series, episodes: list[dict]) -> list[dict]:
     crits = []
     for ep in episodes:
@@ -94,6 +110,10 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
     comp_m = comp.resample("BME").last().reindex(months)
     spx = raw["spx"].resample("BME").last().reindex(months)
 
+    ff = raw.get("fedfunds")
+    ff_m = (ff.resample("BME").last().reindex(months)
+            if ff is not None and not ff.empty else pd.Series(index=months, dtype=float))
+
     snaps = load_snapshots()
     n_high_out, n_high_in = 0, 0
     peaks = [pd.Timestamp(e["peak"]) for e in epi_cfg["episodes"] if not e.get("control")]
@@ -115,6 +135,11 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
         "spx": [None if pd.isna(v) else round(float(v), 2) for v in spx],
         "episodes": epi_cfg["episodes"],
         "criteria": evaluate_criteria(stage_s, engaged_s, epi_cfg["episodes"]),
+        "regime_bands": thresholds["regime_bands"],
+        "fedfunds": [None if pd.isna(v) else round(float(v), 2) for v in ff_m],
+        "fwd_6m": forward_returns(spx, 6),
+        "fwd_12m": forward_returns(spx, 12),
+        "fwd_24m": forward_returns(spx, 24),
         "base_rate": {"threshold": ANALOG_HIGH_SIM_THRESHOLD, "n_high_outside": int(n_high_out),
                        "n_high_inside": int(n_high_in), "n_months": len(months)},
     }
