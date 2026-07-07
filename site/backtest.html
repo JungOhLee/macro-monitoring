@@ -8,30 +8,37 @@
 <body>
 <header><h1><a href="index.html" style="text-decoration:none;color:inherit">&larr; Macro Bubble Monitor</a></h1>
 <div class="muted">Sequencer replay (monthly, publication-lag adjusted) · composite shown as published</div></header>
+<section class="card"><p>Every month since January 1987 is re-scored using only information that was
+available at the time: each data series is shifted by its real-world publication lag, percentiles are
+computed against history up to that month only, and the composite is shown as it was published. The
+sequence tracker is then replayed month by month against that reconstructed past. Nothing on this page
+is fitted after the fact &mdash; thresholds only change when new evidence is written down in advance
+(see <a href="guide.html">the guide</a>).</p></section>
+<section class="card"><h2>Crisis report card</h2><div id="bt-report"></div></section>
 <section class="card"><div id="bt-chart"></div></section>
 <section class="card"><h2>Validation criteria</h2><div id="bt-criteria"></div></section>
+<section class="card"><h2>What happened next</h2>
+<p class="muted">S&amp;P 500 price return over the following 6 / 12 / 24 months, grouped by what this
+site's gauges said at the time. Price only &mdash; dividends excluded; adjacent months share most of
+their forward window, so these are not independent samples.</p>
+<div id="bt-fwd-regime"></div><div id="bt-fwd-stage"></div><div id="bt-fwd-note" class="muted"></div></section>
+<section class="card"><h2>Alarm ledger</h2>
+<p class="muted">Every stretch where the sequence tracker was &ldquo;engaged&rdquo;, split by whether a
+real crisis window (24 months before a past peak) followed. What the market did next is shown either
+way &mdash; false alarms included, per the site's honesty rule.</p>
+<div id="bt-alarms"></div></section>
+<section class="card"><h2>Cost of caution &mdash; a toy exercise</h2>
+<p class="muted">Educational replay, not investment advice: S&amp;P prices exclude dividends (which
+understates equity returns), there are no taxes or trading costs, and the rule is deliberately crude.
+The honest historical lesson is usually that caution buys smaller drawdowns at the price of compounding.</p>
+<div class="sim-controls">
+<label>De-risk when <select id="sim-trigger"></select></label>
+<label>moving <input type="range" id="sim-cash" min="0" max="100" step="5" value="50">
+<span id="sim-cash-label">50%</span> to cash (earning the fed funds rate)</label>
+</div>
+<div id="bt-sim-chart"></div><div id="bt-sim-stats"></div></section>
 <footer class="muted">Monitoring context, not a trading signal.</footer>
 <script src="assets/plotly-finance.min.js"></script>
-<script>
-fetch("data/backtest.json").then(r => r.json()).then(bt => {
-  const shapes = bt.episodes.filter(e => e.criterion !== false || e.control).map(e => {
-    const peak = new Date(e.peak); const start = new Date(peak); start.setMonth(start.getMonth() - 24);
-    return { type: "rect", x0: start.toISOString().slice(0,10), x1: e.peak, y0: 0, y1: 1,
-             yref: "paper", fillcolor: "rgba(214,69,69,.08)", line: { width: 0 } };
-  });
-  Plotly.newPlot("bt-chart", [
-    { x: bt.months, y: bt.spx, name: "S&P 500 (log)", yaxis: "y", line: { color: "#e6e9ef", width: 1.4 } },
-    { x: bt.months, y: bt.composite, name: "Composite", yaxis: "y2", line: { color: "#e0b83c", width: 1.2 } },
-    { x: bt.months, y: bt.stage, name: "Sequence stage", yaxis: "y3", line: { color: "#d64545", width: 1.2, shape: "hv" } },
-  ], { paper_bgcolor: "#1b2029", plot_bgcolor: "#1b2029", font: { color: "#e6e9ef", size: 12 },
-       height: 520, shapes, grid: { rows: 3, columns: 1, roworder: "top to bottom" },
-       yaxis: { type: "log", title: { text: "S&P 500" } },
-       yaxis2: { range: [0, 100], title: { text: "score" } },
-       yaxis3: { range: [0, 6.5], dtick: 1, title: { text: "stage" } },
-       legend: { orientation: "h", y: -0.08 } }, { displayModeBar: false, responsive: true });
-  document.getElementById("bt-criteria").innerHTML = "<ul>" + bt.criteria.map(c =>
-    `<li>${c.pass ? "✅" : "❌"} ${c.name} <span class="muted">(${c.detail})</span></li>`).join("") + "</ul>";
-});
-</script>
+<script src="assets/backtest.js"></script>
 </body>
 </html>
