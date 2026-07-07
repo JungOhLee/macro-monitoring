@@ -210,6 +210,7 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
         indicators[ind.id] = {
             "name": ind.name, "pillar": ind.pillar, "role": ind.role,
             "direction": ind.direction, "frequency": r.frequency,
+            "blurb": ind.blurb,
             "last_obs": r.series.index.max().strftime("%Y-%m-%d"),
             "stale": backing in stale,
             "latest": {

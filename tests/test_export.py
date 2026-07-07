@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -266,3 +267,23 @@ def test_downsample_never_exceeds_max():
         assert len(out) <= 1000, n
         assert out.index[-1] == s.index[-1]
         assert out.iloc[-1] == s.iloc[-1]
+
+
+def test_export_indicators_include_blurb(site):
+    reg = make_reg()
+    reg = Registry(
+        series=reg.series,
+        indicators=[replace(i, blurb=f"About {i.id}.") for i in reg.indicators],
+        pillar_weights=reg.pillar_weights,
+    )
+    export.export_site(reg, THX)
+    indicators = json.loads((site / "indicators.json").read_text())
+    assert indicators["i_up"]["blurb"] == "About i_up."
+
+
+def test_export_blurb_key_present_even_when_unset(site):
+    # Fixture registries built directly (not via load_registry) may carry blurb=None;
+    # the key must still exist so the frontend can guard on d.blurb uniformly.
+    export.export_site(make_reg(), THX)
+    indicators = json.loads((site / "indicators.json").read_text())
+    assert "blurb" in indicators["i_up"] and indicators["i_up"]["blurb"] is None
