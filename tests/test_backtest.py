@@ -83,3 +83,65 @@ def test_forward_returns_none_propagates():
     spx = pd.Series([100.0, np.nan, 121.0], index=months)
     assert backtest.forward_returns(spx, 1) == [None, None, None]
     assert backtest.forward_returns(spx, 2) == [21.0, None, None]
+
+
+def _report_fixture():
+    months = pd.date_range("1998-01-30", "2003-12-31", freq="BME")
+    stage = pd.Series(0, index=months)
+    stage.loc["1999-06-30":"2000-01-31"] = 4
+    engaged = pd.Series(False, index=months)
+    engaged.loc["1999-03-31":"2000-03-31"] = True
+    spx = pd.Series(100.0, index=months)
+    # decline from the 2000-03 peak to a 50.0 trough at 2001-09, then partial recovery
+    decline = np.linspace(97.0, 50.0, 18)          # 2000-04-28 .. 2001-09-28
+    spx.iloc[27:45] = decline
+    spx.iloc[45:] = 60.0
+    return months, stage, engaged, spx
+
+
+def test_report_card_lead_time_and_drawdown():
+    _, stage, engaged, spx = _report_fixture()
+    eps = [{"id": "dotcom", "name": "Dot-com bust", "peak": "2000-03-24",
+            "report_note": "margin-debt data gap"}]
+    rows = backtest.build_report_card(stage, engaged, spx, eps)
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["control"] is False
+    assert r["first_engaged"] == "1999-03-31"
+    assert r["first_stage4"] == "1999-06-30"
+    assert r["lead_months"] == 9                      # 1999-06 -> 2000-03
+    assert r["max_drawdown_pct"] == -50.0             # 100 -> 50
+    assert r["months_to_trough"] == 18                # 2000-03 -> 2001-09
+    assert r["note"] == "margin-debt data gap"
+
+
+def test_report_card_never_fired_row_is_honest():
+    months, _, _, spx = _report_fixture()
+    stage = pd.Series(0, index=months)
+    engaged = pd.Series(False, index=months)
+    rows = backtest.build_report_card(stage, engaged, spx, [
+        {"id": "dotcom", "name": "Dot-com bust", "peak": "2000-03-24"}])
+    r = rows[0]
+    assert r["first_engaged"] is None and r["first_stage4"] is None
+    assert r["lead_months"] is None
+    assert r["max_drawdown_pct"] == -50.0             # drawdown is about the market, not the tracker
+
+
+def test_report_card_control_row_counts_2019():
+    months = pd.date_range("2018-01-31", "2020-12-31", freq="BME")
+    engaged = pd.Series(False, index=months)
+    engaged.loc["2019-06-28":"2019-08-30"] = True
+    stage = pd.Series(0, index=months)
+    spx = pd.Series(100.0, index=months)
+    rows = backtest.build_report_card(stage, engaged, spx, [
+        {"id": "covid", "name": "COVID crash", "peak": "2020-02-19", "control": True}])
+    r = rows[0]
+    assert r["control"] is True and r["engaged_months"] == 3
+    assert r["first_engaged"] is None and r["lead_months"] is None
+
+
+def test_report_card_skips_criterion_false():
+    months, stage, engaged, spx = _report_fixture()
+    rows = backtest.build_report_card(stage, engaged, spx, [
+        {"id": "black1987", "name": "Black Monday", "peak": "1987-08-25", "criterion": False}])
+    assert rows == []

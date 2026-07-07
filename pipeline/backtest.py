@@ -102,6 +102,51 @@ def monthly_top1_similarities(months, snaps: pd.DataFrame, froth: dict) -> list[
     return sims
 
 
+def _months_between(a: pd.Timestamp, b: pd.Timestamp) -> int:
+    return (b.year - a.year) * 12 + (b.month - a.month)
+
+
+def build_report_card(stage: pd.Series, engaged: pd.Series, spx_m: pd.Series,
+                      episodes: list[dict]) -> list[dict]:
+    """One JSON-ready row per scored episode: when the tracker first engaged / first
+    reached stage 4 inside the peak-24m..peak window, the lead time that gave, and what
+    the market then did (peak-to-trough on monthly closes, trough within 36 months).
+    The covid control row reports engaged-months-in-2019 instead of lead times.
+    Episodes with criterion: false are excluded, same rule as evaluate_criteria."""
+    rows = []
+    for ep in episodes:
+        if ep.get("criterion") is False:
+            continue
+        peak = pd.Timestamp(ep["peak"])
+        base = {"episode": ep["id"], "name": ep.get("name", ep["id"]), "peak": ep["peak"],
+                "control": bool(ep.get("control", False)), "first_engaged": None,
+                "first_stage4": None, "lead_months": None, "max_drawdown_pct": None,
+                "months_to_trough": None, "engaged_months": None,
+                "note": ep.get("report_note", "")}
+        if ep.get("control"):
+            window = engaged[(engaged.index >= "2019-01-01") & (engaged.index <= "2019-12-31")]
+            base["engaged_months"] = int(window.sum())
+            rows.append(base)
+            continue
+        in_win = (stage.index >= peak - pd.DateOffset(months=24)) & (stage.index <= peak)
+        eng_dates = engaged.index[in_win & engaged.to_numpy(dtype=bool)]
+        st4_dates = stage.index[in_win & (stage.to_numpy() >= 4)]
+        if len(eng_dates):
+            base["first_engaged"] = eng_dates[0].strftime("%Y-%m-%d")
+        if len(st4_dates):
+            base["first_stage4"] = st4_dates[0].strftime("%Y-%m-%d")
+            base["lead_months"] = _months_between(st4_dates[0], peak)
+        at_peak = spx_m[spx_m.index <= peak].dropna()
+        after = spx_m[(spx_m.index > peak) & (spx_m.index <= peak + pd.DateOffset(months=36))].dropna()
+        if not at_peak.empty and not after.empty:
+            level = float(at_peak.iloc[-1])
+            trough_date = after.idxmin()
+            base["max_drawdown_pct"] = round((float(after.min()) / level - 1.0) * 100.0, 1)
+            base["months_to_trough"] = _months_between(peak, trough_date)
+        rows.append(base)
+    return rows
+
+
 def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> dict:
     months, stage_s, engaged_s, _state, result, _lagged = replay_monthly(reg, thresholds, raw, start)
 
@@ -142,4 +187,5 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
         "fwd_24m": forward_returns(spx, 24),
         "base_rate": {"threshold": ANALOG_HIGH_SIM_THRESHOLD, "n_high_outside": int(n_high_out),
                        "n_high_inside": int(n_high_in), "n_months": len(months)},
+        "report_card": build_report_card(stage_s, engaged_s, spx, epi_cfg["episodes"]),
     }
