@@ -67,20 +67,40 @@ function regimeOf(score, bands) {
   return bands[bands.length - 1].name;
 }
 
-// One grouped-box figure: x = group label, one box trace per horizon.
-function fwdBoxFigure(elId, groups, bt, title) {
+// Linear-interpolated quantile of an ASCENDING-sorted array (same convention as
+// numpy's default); null on empty input.
+function quantile(sorted, q) {
+  if (!sorted.length) return null;
+  const pos = (sorted.length - 1) * q;
+  const lo = Math.floor(pos), hi = Math.ceil(pos);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
+
+// One grouped-bar figure per grouping dimension: x = group label, one bar trace per
+// horizon, bar = median forward return, asymmetric error bar = interquartile range.
+// The vendored plotly-finance bundle registers NO "box" trace (verified at runtime:
+// scatter/bar/histogram/funnel/waterfall/pie/funnelarea/indicator/ohlc/candlestick
+// only -- an unknown type silently coerces to scatter lines), so the distribution is
+// summarized as median + IQR instead of a box plot.
+function fwdDistFigure(elId, groups, bt, title) {
   const horizons = [["fwd_6m", "6m"], ["fwd_12m", "12m"], ["fwd_24m", "24m"]];
   const traces = horizons.map(([key, label]) => {
-    const x = [], y = [];
-    for (const g of groups) for (const i of g.idx) {
-      const v = bt[key][i];
-      if (v != null) { x.push(g.label); y.push(v); }
+    const x = [], med = [], up = [], down = [];
+    for (const g of groups) {
+      const vals = g.idx.map(i => bt[key][i]).filter(v => v != null).sort((a, b) => a - b);
+      if (!vals.length) continue;
+      const m = quantile(vals, 0.5);
+      x.push(g.label); med.push(m);
+      up.push(quantile(vals, 0.75) - m); down.push(m - quantile(vals, 0.25));
     }
-    return { type: "box", name: label, x, y, boxpoints: false };
+    return { type: "bar", name: label, x, y: med,
+             error_y: { type: "data", symmetric: false, array: up, arrayminus: down,
+                        thickness: 1.2, width: 4 } };
   });
-  Plotly.newPlot(elId, traces, { ...DARK, boxmode: "group", height: 330,
-    margin: { l: 45, r: 15, t: 30, b: 60 }, title: { text: title, font: { size: 13 } },
-    yaxis: { title: { text: "forward return %" }, zeroline: true, zerolinecolor: "#8b93a3" },
+  Plotly.newPlot(elId, traces, { ...DARK, barmode: "group", height: 330,
+    margin: { l: 55, r: 15, t: 30, b: 60 }, title: { text: title, font: { size: 13 } },
+    yaxis: { title: { text: "median fwd return % · IQR", font: { size: 11 } },
+             zeroline: true, zerolinecolor: "#8b93a3" },
     legend: { orientation: "h", y: -0.25 } }, CFG);
 }
 
@@ -99,8 +119,8 @@ function renderForwardReturns(bt) {
     if (r) regimeGroups.find(g => g.name === r).idx.push(i);
   });
   regimeGroups.forEach(g => { g.label = `${g.label} (n=${g.idx.length})`; });
-  fwdBoxFigure("bt-fwd-regime", [all, ...regimeGroups], bt,
-               "S&P 500 forward returns by composite regime at the time");
+  fwdDistFigure("bt-fwd-regime", [all, ...regimeGroups], bt,
+                "S&P 500 forward returns by composite regime at the time");
 
   const stageGroups = [
     { label: "stage 0", test: s => s === 0 },
@@ -108,8 +128,8 @@ function renderForwardReturns(bt) {
     { label: "stage ≥ 4", test: s => s >= 4 },
   ].map(g => ({ label: g.label, idx: bt.stage.map((s, i) => g.test(s) ? i : -1).filter(i => i >= 0) }));
   stageGroups.forEach(g => { g.label = `${g.label} (n=${g.idx.length})`; });
-  fwdBoxFigure("bt-fwd-stage", [all, ...stageGroups], bt,
-               "S&P 500 forward returns by sequence stage at the time");
+  fwdDistFigure("bt-fwd-stage", [all, ...stageGroups], bt,
+                "S&P 500 forward returns by sequence stage at the time");
 
   const noteParts = [all, ...regimeGroups, ...stageGroups].map(g => {
     const p = pctNegative12m(bt, g.idx);

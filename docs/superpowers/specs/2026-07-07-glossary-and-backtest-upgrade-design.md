@@ -115,10 +115,15 @@ The control row reports engaged-months-in-2019 instead of lead times. Episodes w
 Client-side grouping of the `fwd_*` arrays (no server-side stats):
 
 - **By composite regime**: bucket each month by its as-published composite against
-  `regime_bands` (cool/warm/frothy/bubble_risk). One Plotly grouped **box** figure:
-  x = regime group + an "all months" baseline group, one box trace per horizon
-  (6m/12m/24m), `boxmode: "group"`. The vendored plotly-finance bundle includes the
-  box trace (verified 2026-07-07).
+  `regime_bands` (cool/warm/frothy/bubble_risk). One Plotly grouped **bar** figure:
+  x = regime group + an "all months" baseline group, one bar trace per horizon
+  (6m/12m/24m), bar = median forward return, asymmetric `error_y` whiskers = the
+  interquartile range. (Amended 2026-07-07 post-deploy: the original design said box
+  plots, on a string-match "verification" that the vendored bundle included the box
+  trace — a false positive. Runtime schema check shows the plotly-finance partial
+  bundle registers only scatter/bar/histogram/funnel/waterfall/pie/funnelarea/
+  indicator/ohlc/candlestick; an unregistered type silently coerces to scatter lines.
+  Median-bars + IQR whiskers is the replacement, verified rendering on live data.)
 - **By sequence stage**: same figure shape with buckets stage 0, stages 1–3, stage ≥ 4.
 - Under each figure, a one-line text summary: % of months with a negative 12-month
   forward return per bucket vs. baseline.
