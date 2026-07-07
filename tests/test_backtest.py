@@ -70,3 +70,16 @@ def test_criterion_flag_skips_episode():
     assert "stage>=4 before gfc peak" in names
     assert "quiet through 2019 (covid control)" in names
     assert len(crits) == 3
+
+def test_forward_returns_exact_and_null_tail():
+    months = pd.date_range("2020-01-31", periods=4, freq="BME")
+    spx = pd.Series([100.0, 110.0, 121.0, 133.1], index=months)
+    assert backtest.forward_returns(spx, 1) == [10.0, 10.0, 10.0, None]
+    assert backtest.forward_returns(spx, 2) == [21.0, 21.0, None, None]
+
+
+def test_forward_returns_none_propagates():
+    months = pd.date_range("2020-01-31", periods=3, freq="BME")
+    spx = pd.Series([100.0, np.nan, 121.0], index=months)
+    assert backtest.forward_returns(spx, 1) == [None, None, None]
+    assert backtest.forward_returns(spx, 2) == [21.0, None, None]
