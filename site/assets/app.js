@@ -336,7 +336,10 @@ function renderIndicator() {
     `<span class="chip">pct ${d.latest.pct_full ?? "n/a"}</span>` +
     `<span class="chip">z ${d.latest.zscore ?? "n/a"}</span>` +
     (d.stale ? ' <span class="badge-stale">STALE</span>' : "") +
-    ` <span class="muted">last obs ${d.last_obs}</span>`;
+    ` <span class="muted">last obs ${d.last_obs}</span>` +
+    // definition for the PRIMARY indicator only -- pinned compare extras would repeat
+    // near-identical prose and crowd the chart.
+    (d.blurb ? `<p class="indicator-blurb muted">${d.blurb}</p>` : "");
   renderCompareChips(ids);
   if (ids.length <= 1) {
     renderSingleIndicator(d);
