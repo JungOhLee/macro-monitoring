@@ -114,10 +114,85 @@ function renderForwardReturns(bt) {
   document.getElementById("bt-fwd-note").textContent = noteParts.join(" · ");
 }
 
+// Trigger tests take the month index whose END-OF-MONTH signal decides the NEXT month's
+// position (the caller passes t-1) -- no look-ahead by construction.
+function triggerDefs(bt) {
+  const warmUpper = bt.regime_bands[1].upper;    // above this = Frothy or worse
+  const frothyUpper = bt.regime_bands[2].upper;  // above this = Bubble risk
+  return [
+    { key: "stage4", label: "sequence stage ≥ 4", test: i => bt.stage[i] >= 4 },
+    { key: "stage3", label: "sequence stage ≥ 3", test: i => bt.stage[i] >= 3 },
+    { key: "frothy", label: `composite Frothy or worse (> ${warmUpper})`,
+      test: i => bt.composite[i] != null && bt.composite[i] > warmUpper },
+    { key: "bubble", label: `composite Bubble risk (> ${frothyUpper})`,
+      test: i => bt.composite[i] != null && bt.composite[i] > frothyUpper },
+    { key: "either", label: `Bubble risk OR stage ≥ 4`,
+      test: i => (bt.composite[i] != null && bt.composite[i] > frothyUpper) || bt.stage[i] >= 4 },
+  ];
+}
+
+function runSim(bt, test, cashFrac) {
+  let first = bt.spx.findIndex(v => v != null);
+  const dates = [bt.months[first]], strat = [1], hold = [1];
+  let months = 0, deRisked = 0;
+  for (let t = first + 1; t < bt.months.length; t++) {
+    if (bt.spx[t] == null || bt.spx[t - 1] == null) break;
+    const rEq = bt.spx[t] / bt.spx[t - 1] - 1;
+    const rCash = bt.fedfunds[t - 1] != null ? bt.fedfunds[t - 1] / 100 / 12 : 0;
+    const on = test(t - 1);
+    const wEq = on ? 1 - cashFrac : 1;
+    strat.push(strat[strat.length - 1] * (1 + wEq * rEq + (1 - wEq) * rCash));
+    hold.push(hold[hold.length - 1] * (1 + rEq));
+    dates.push(bt.months[t]);
+    months++; if (on) deRisked++;
+  }
+  return { dates, strat, hold, months, deRisked };
+}
+
+function simStats(curve, months) {
+  const final = curve[curve.length - 1];
+  const cagr = (Math.pow(final, 12 / months) - 1) * 100;
+  let peak = -Infinity, dd = 0;
+  for (const v of curve) { if (v > peak) peak = v; dd = Math.min(dd, v / peak - 1); }
+  return { final, cagr, dd: dd * 100 };
+}
+
+function renderSim(bt, triggers) {
+  const trig = triggers.find(t => t.key === document.getElementById("sim-trigger").value);
+  const cashFrac = +document.getElementById("sim-cash").value / 100;
+  document.getElementById("sim-cash-label").textContent = `${Math.round(cashFrac * 100)}%`;
+  const r = runSim(bt, trig.test, cashFrac);
+  Plotly.newPlot("bt-sim-chart", [
+    { x: r.dates, y: r.hold, name: "Buy & hold", line: { color: "#8b93a3", width: 1.3 } },
+    { x: r.dates, y: r.strat, name: "De-risking rule", line: { color: "#6ea8fe", width: 1.6 } },
+  ], { ...DARK, height: 340, margin: { l: 50, r: 15, t: 10, b: 35 },
+       yaxis: { type: "log", title: { text: "growth of $1 (log)" } },
+       legend: { orientation: "h", y: -0.12 } }, CFG);
+  const s = simStats(r.strat, r.months), h = simStats(r.hold, r.months);
+  document.getElementById("bt-sim-stats").innerHTML =
+    `<table class="bt-table"><tr><th></th><th>CAGR</th><th>Max drawdown</th>` +
+    `<th>Growth of $1</th><th>Months de-risked</th></tr>` +
+    `<tr><td>De-risking rule</td><td>${fmtPct(s.cagr)}</td><td>${fmtPct(s.dd)}</td>` +
+    `<td>${s.final.toFixed(1)}×</td><td>${r.deRisked} of ${r.months} (${Math.round(100 * r.deRisked / r.months)}%)</td></tr>` +
+    `<tr><td>Buy &amp; hold</td><td>${fmtPct(h.cagr)}</td><td>${fmtPct(h.dd)}</td>` +
+    `<td>${h.final.toFixed(1)}×</td><td>0</td></tr></table>`;
+}
+
+function initSimulator(bt) {
+  const triggers = triggerDefs(bt);
+  const sel = document.getElementById("sim-trigger");
+  sel.innerHTML = triggers.map(t => `<option value="${t.key}">${t.label}</option>`).join("");
+  sel.value = "stage4";
+  sel.addEventListener("change", () => renderSim(bt, triggers));
+  document.getElementById("sim-cash").addEventListener("input", () => renderSim(bt, triggers));
+  renderSim(bt, triggers);
+}
+
 fetch("data/backtest.json").then(r => r.json()).then(bt => {
   renderReportCard(bt);
   renderChart(bt);
   renderCriteria(bt);
   renderForwardReturns(bt);
   renderAlarms(bt);
+  initSimulator(bt);
 });
