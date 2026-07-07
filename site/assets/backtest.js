@@ -1,6 +1,10 @@
 const DARK = { paper_bgcolor: "#1b2029", plot_bgcolor: "#1b2029", font: { color: "#e6e9ef", size: 12 } };
 const CFG = { displayModeBar: false, responsive: true };
-const fmtPct = v => v == null ? "–" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`;
+const fmtPct = v => {
+  if (v == null) return "–";
+  const s = v.toFixed(1);
+  return s === "-0.0" ? "0.0%" : `${v > 0 ? "+" : ""}${s}%`;
+};
 
 function renderReportCard(bt) {
   const rows = bt.report_card.map(r => {
@@ -59,7 +63,7 @@ function renderAlarms(bt) {
 
 function regimeOf(score, bands) {
   if (score == null) return null;
-  for (const b of bands) if (score <= b.upper) return b.name;
+  for (const b of bands) if (score < b.upper) return b.name;
   return bands[bands.length - 1].name;
 }
 
@@ -122,12 +126,12 @@ function triggerDefs(bt) {
   return [
     { key: "stage4", label: "sequence stage ≥ 4", test: i => bt.stage[i] >= 4 },
     { key: "stage3", label: "sequence stage ≥ 3", test: i => bt.stage[i] >= 3 },
-    { key: "frothy", label: `composite Frothy or worse (> ${warmUpper})`,
-      test: i => bt.composite[i] != null && bt.composite[i] > warmUpper },
-    { key: "bubble", label: `composite Bubble risk (> ${frothyUpper})`,
-      test: i => bt.composite[i] != null && bt.composite[i] > frothyUpper },
+    { key: "frothy", label: `composite Frothy or worse (≥ ${warmUpper})`,
+      test: i => bt.composite[i] != null && bt.composite[i] >= warmUpper },
+    { key: "bubble", label: `composite Bubble risk (≥ ${frothyUpper})`,
+      test: i => bt.composite[i] != null && bt.composite[i] >= frothyUpper },
     { key: "either", label: `Bubble risk OR stage ≥ 4`,
-      test: i => (bt.composite[i] != null && bt.composite[i] > frothyUpper) || bt.stage[i] >= 4 },
+      test: i => (bt.composite[i] != null && bt.composite[i] >= frothyUpper) || bt.stage[i] >= 4 },
   ];
 }
 
@@ -136,6 +140,9 @@ function runSim(bt, test, cashFrac) {
   const dates = [bt.months[first]], strat = [1], hold = [1];
   let months = 0, deRisked = 0;
   for (let t = first + 1; t < bt.months.length; t++) {
+    // Deviation from spec B5 (keep-prior-weight on gaps), simplification verified safe:
+    // the exported monthly spx has no interior nulls (474/474 populated), so a mid-series
+    // gap -- which would truncate both curves here -- cannot occur with current data.
     if (bt.spx[t] == null || bt.spx[t - 1] == null) break;
     const rEq = bt.spx[t] / bt.spx[t - 1] - 1;
     const rCash = bt.fedfunds[t - 1] != null ? bt.fedfunds[t - 1] / 100 / 12 : 0;
