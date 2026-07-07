@@ -62,44 +62,65 @@ series:
 indicators:
   # ---- Pillar A: valuation ----
   - {id: buffett, name: "Buffett indicator (corp equities / GDP)", pillar: valuation, role: magnitude, direction: normal,
-     formula: ratio, inputs: [ncbeilq027s, gdp], lag_days: 75}
-  - {id: cape, name: "Shiller CAPE", pillar: valuation, role: magnitude, direction: normal, series: shiller_cape, lag_days: 20}
+     formula: ratio, inputs: [ncbeilq027s, gdp], lag_days: 75,
+     blurb: "The total market value of US corporate equities divided by GDP — how big the stock market is relative to the real economy beneath it. Higher means stocks are more expensive by this yardstick, so a higher value scores a higher froth percentile."}
+  - {id: cape, name: "Shiller CAPE", pillar: valuation, role: magnitude, direction: normal, series: shiller_cape, lag_days: 20,
+     blurb: "Robert Shiller's cyclically-adjusted price-to-earnings ratio: the S&P 500's price divided by its average inflation-adjusted earnings over the past 10 years, smoothing boom-bust earnings swings. Higher CAPE means pricier stocks versus their long-run earning power; it peaked near 44 in December 1999."}
   - {id: erp, name: "Equity risk premium (CAPE yield - 10Y real)", pillar: valuation, role: magnitude, direction: invert,
-     formula: erp, inputs: [shiller_cape, dfii10], lag_days: 20}
+     formula: erp, inputs: [shiller_cape, dfii10], lag_days: 20,
+     blurb: "Equity risk premium: the extra annual return stocks are priced to deliver over safe inflation-protected government bonds (CAPE earnings yield minus the 10-year real Treasury yield). A thin premium means stocks offer little reward for their risk — this indicator is inverted, so a LOWER premium scores a HIGHER froth percentile."}
   # ---- Pillar B: leverage ----
-  - {id: baa_spread, name: "Baa corporate credit spread (Baa - 10Y)", pillar: leverage, role: timing, direction: invert, series: baa10y, lag_days: 1}
+  - {id: baa_spread, name: "Baa corporate credit spread (Baa - 10Y)", pillar: leverage, role: timing, direction: invert, series: baa10y, lag_days: 1,
+     blurb: "The extra yield investors demand for medium-quality (Baa-rated) corporate bonds over 10-year Treasuries. Tight spreads mean lenders are relaxed and credit flows freely — typical boom behavior — so this indicator is inverted: a NARROWER spread scores a HIGHER froth percentile."}
   - {id: household_debt_gdp, name: "Household debt / GDP", pillar: leverage, role: timing, direction: normal,
-     formula: ratio, inputs: [cmdebt, gdp], lag_days: 75}
+     formula: ratio, inputs: [cmdebt, gdp], lag_days: 75,
+     blurb: "Total US household debt (mortgages, cards, loans) divided by GDP. The higher it is, the more stretched family balance sheets are and the more a downturn feeds on itself; it peaked near 100% of GDP just before the 2008 crisis."}
   - {id: corporate_debt_gdp, name: "Corporate debt / GDP", pillar: leverage, role: timing, direction: normal,
-     formula: ratio, inputs: [bcnsdodns, gdp], lag_days: 75}
-  - {id: sloos_tightening, name: "SLOOS net tightening (C&I)", pillar: leverage, role: timing, direction: invert, series: drtscilm, lag_days: 20}
+     formula: ratio, inputs: [bcnsdodns, gdp], lag_days: 75,
+     blurb: "Debt of US non-financial businesses divided by GDP. High corporate leverage means more companies are vulnerable to falling profits or rising rates — fuel that can turn an ordinary slowdown into a credit bust."}
+  - {id: sloos_tightening, name: "SLOOS net tightening (C&I)", pillar: leverage, role: timing, direction: invert, series: drtscilm, lag_days: 20,
+     blurb: "From the Fed's Senior Loan Officer Opinion Survey: the net share of banks tightening standards on business loans. Negative means banks are loosening and credit is easy — boom behavior — so this indicator is inverted: EASIER lending scores a HIGHER froth percentile."}
   # ---- Pillar C: liquidity ----
   - {id: m2_yoy, name: "M2 YoY %", pillar: liquidity, role: timing, direction: normal,
-     formula: yoy, inputs: [m2sl], lag_days: 14}
+     formula: yoy, inputs: [m2sl], lag_days: 14,
+     blurb: "Year-over-year growth of the M2 money supply (cash, checking, savings and similar deposits). Fast money growth means abundant liquidity that can chase asset prices; it spiked above 25% in 2020-21 ahead of the post-COVID inflation."}
   - {id: fed_bs_yoy, name: "Fed balance sheet YoY %", pillar: liquidity, role: timing, direction: normal,
-     formula: yoy, inputs: [walcl], lag_days: 1}
+     formula: yoy, inputs: [walcl], lag_days: 1,
+     blurb: "Year-over-year growth of the Federal Reserve's total assets. When the Fed buys bonds ('quantitative easing') its balance sheet swells and newly created money flows toward markets, so faster growth means easier conditions and a higher froth percentile."}
   - {id: net_liquidity, name: "Net liquidity (Fed BS - TGA - RRP, $bn)", pillar: liquidity, role: timing, direction: normal,
-     formula: net_liquidity, inputs: [walcl, wtregen, rrpontsyd], lag_days: 1}
+     formula: net_liquidity, inputs: [walcl, wtregen, rrpontsyd], lag_days: 1,
+     blurb: "The Fed's balance sheet minus the Treasury's cash account (TGA) and money parked back at the Fed overnight (reverse repos, RRP) — a rough gauge of how much central-bank money is actually free to slosh around markets rather than sitting idle."}
   - {id: real_ffr, name: "Real Fed Funds rate", pillar: liquidity, role: timing, direction: invert,
-     formula: real_rate, inputs: [fedfunds, cpilfesl], lag_days: 14}
-  - {id: curve_10y2y, name: "10Y-2Y spread", pillar: liquidity, role: timing, direction: invert, series: t10y2y, lag_days: 1}
-  - {id: curve_10y3m, name: "10Y-3M spread", pillar: liquidity, role: timing, direction: invert, series: t10y3m, lag_days: 1}
+     formula: real_rate, inputs: [fedfunds, cpilfesl], lag_days: 14,
+     blurb: "The Fed's policy rate minus core inflation — the true, inflation-adjusted cost of overnight money. When negative, borrowing is effectively free in real terms and speculation is cheap to fund; this indicator is inverted, so a LOWER real rate scores a HIGHER froth percentile."}
+  - {id: curve_10y2y, name: "10Y-2Y spread", pillar: liquidity, role: timing, direction: invert, series: t10y2y, lag_days: 1,
+     blurb: "The 10-year Treasury yield minus the 2-year — the classic yield-curve slope. Below zero ('inversion') means markets expect rate cuts ahead, historically a recession warning 6-24 months early. Inverted indicator: a more NEGATIVE spread scores a HIGHER froth percentile."}
+  - {id: curve_10y3m, name: "10Y-3M spread", pillar: liquidity, role: timing, direction: invert, series: t10y3m, lag_days: 1,
+     blurb: "The 10-year Treasury yield minus the 3-month bill — the yield-curve measure with the best recession-forecasting record. Below zero the curve is inverted: short-term money pays more than long-term, meaning markets expect trouble. Inverted indicator: deeper inversion scores a HIGHER froth percentile."}
   # ---- Pillar D: sentiment ----
-  - {id: vix, name: "VIX", pillar: sentiment, role: timing, direction: invert, series: vixcls, lag_days: 1}
+  - {id: vix, name: "VIX", pillar: sentiment, role: timing, direction: invert, series: vixcls, lag_days: 1,
+     blurb: "The market's expectation of S&P 500 volatility over the next 30 days, implied by option prices — the 'fear gauge'. A low VIX signals complacency, which is when bubbles inflate, so this indicator is inverted: CALM markets score a HIGHER froth percentile."}
   - {id: btc_yoy, name: "Bitcoin YoY %", pillar: sentiment, role: timing, direction: normal,
-     formula: yoy, inputs: [btcusd], lag_days: 1}
+     formula: yoy, inputs: [btcusd], lag_days: 1,
+     blurb: "Bitcoin's price change over the past year, used here purely as a speculative-appetite thermometer. Triple-digit yearly gains signal the kind of 'risk-on' euphoria that accompanied past manias."}
   # ---- Pillar E: macro stress & breadth ----
-  - {id: sahm, name: "Sahm rule gap", pillar: macro, role: confirmation, direction: normal, series: sahmrealtime, lag_days: 35}
-  - {id: cfnai_act, name: "CFNAI activity (weak = stress)", pillar: macro, role: confirmation, direction: invert, series: cfnai, lag_days: 25}
+  - {id: sahm, name: "Sahm rule gap", pillar: macro, role: confirmation, direction: normal, series: sahmrealtime, lag_days: 35,
+     blurb: "Claudia Sahm's recession rule: how far the 3-month average unemployment rate has risen above its low of the past 12 months. A gap of 0.5 points or more has marked the start of every US recession since 1970. A confirmation signal — it fires as a downturn begins, not before."}
+  - {id: cfnai_act, name: "CFNAI activity (weak = stress)", pillar: macro, role: confirmation, direction: invert, series: cfnai, lag_days: 25,
+     blurb: "The Chicago Fed National Activity Index, a weighted blend of 85 monthly indicators of production, jobs, spending and housing. Zero means trend growth; deeply negative means contraction. Inverted here: WEAKER activity scores HIGHER, and like the Sahm rule it confirms a downturn rather than predicting one."}
   - {id: spx_200dma_dist, name: "S&P 500 distance from 200-DMA %", pillar: macro, role: confirmation, direction: invert,
-     formula: dma_distance, inputs: [spx], lag_days: 1}
+     formula: dma_distance, inputs: [spx], lag_days: 1,
+     blurb: "How far the S&P 500 sits above or below its own 200-day moving average, the standard long-term trend line. A break below it is a classic sign the uptrend has cracked. Inverted indicator: a deeper break BELOW trend scores a HIGHER percentile — this confirms stress rather than predicting it."}
   - {id: rsp_spy_breadth, name: "Breadth: RSP/SPY vs its 200-DMA %", pillar: macro, role: timing, direction: invert,
-     formula: ratio_dma_distance, inputs: [rsp, spy], lag_days: 1}
+     formula: ratio_dma_distance, inputs: [rsp, spy], lag_days: 1,
+     blurb: "Compares the equal-weighted S&P 500 (RSP) against the ordinary cap-weighted index (SPY) relative to its own 200-day trend. When the ratio sinks, gains are carried by a few giant stocks while the average stock lags — 'narrow breadth', a classic late-cycle divergence. Inverted: NARROWER breadth scores HIGHER."}
   - {id: dollar_spliced, name: "Trade-weighted dollar (spliced)", pillar: macro, role: confirmation, direction: normal,
-     formula: splice, inputs: [dtwexbgs, dtwexm], lag_days: 1}
+     formula: splice, inputs: [dtwexbgs, dtwexm], lag_days: 1,
+     blurb: "The dollar's value against a trade-weighted basket of other currencies (two official series spliced at 2019). A sharply stronger dollar tightens global finance — foreign borrowers of dollars get squeezed — and often accompanies stress episodes. A confirmation-side input, not a bubble ingredient."}
   # ---- Pillar B: leverage (manual) ----
   - {id: margin_debt_yoy, name: "FINRA margin debt YoY %", pillar: leverage, role: timing, direction: normal,
-     formula: yoy, inputs: [margin_debt], lag_days: 25}
+     formula: yoy, inputs: [margin_debt], lag_days: 25,
+     blurb: "Year-over-year change in margin debt — money borrowed against brokerage accounts to buy more securities. Rapid growth means investors are leveraging up to chase the rally, one of the most reliable late-bubble behaviors; it peaked just before the 2000 and 2007 tops."}
   # ---- Pillar: context (display-only, added 2026-07-06 per user request -- "essential
   # metrics to understand market status": CPI, PPI, hiring, and the policy rate. These are
   # ingested, scored for raw+percentile, and exported for the drill-down, but role=context
@@ -107,16 +128,23 @@ indicators:
   # vectors (today + episode snapshots), the sequencer, the backtest, and pillar-extreme
   # alerts -- see docs/superpowers/specs/2026-07-05-macro-monitor-design.md amendment. ----
   - {id: cpi_yoy, name: "CPI inflation (YoY)", pillar: context, role: context, direction: normal,
-     formula: yoy, inputs: [cpiaucsl], lag_days: 14}
+     formula: yoy, inputs: [cpiaucsl], lag_days: 14,
+     blurb: "The Consumer Price Index's change over the past year — headline inflation, the everyday cost of living including food and energy. Display-only context: it shapes what the Fed does but is not part of any score on this site."}
   - {id: core_cpi_yoy, name: "Core CPI inflation (YoY)", pillar: context, role: context, direction: normal,
-     formula: yoy, inputs: [cpilfesl], lag_days: 14}
+     formula: yoy, inputs: [cpilfesl], lag_days: 14,
+     blurb: "CPI inflation excluding volatile food and energy prices — the 'core' measure the Fed watches to judge underlying inflation pressure. Display-only context, excluded from all scores."}
   - {id: ppi_yoy, name: "PPI inflation (YoY)", pillar: context, role: context, direction: normal,
-     formula: yoy, inputs: [ppiaco], lag_days: 14}
+     formula: yoy, inputs: [ppiaco], lag_days: 14,
+     blurb: "Producer Price Index inflation: the change in prices businesses receive, often an early hint of consumer inflation ahead as costs pass through supply chains. Display-only context, excluded from all scores."}
   - {id: payrolls_yoy, name: "Nonfarm payrolls (YoY %)", pillar: context, role: context, direction: normal,
-     formula: yoy, inputs: [payems], lag_days: 35}
+     formula: yoy, inputs: [payems], lag_days: 35,
+     blurb: "Year-over-year growth in nonfarm payrolls — the total count of US jobs from the monthly employment report. Around +1.5-2% is healthy; near zero or negative signals a stalling economy. Display-only context, excluded from all scores."}
   - {id: unemployment, name: "Unemployment rate", pillar: context, role: context, direction: normal,
-     series: unrate, lag_days: 35}
+     series: unrate, lag_days: 35,
+     blurb: "The share of the labor force actively looking for work. It moves slowly but rarely rises just a little — once it turns decisively up, a recession is usually already under way (the Sahm rule formalizes exactly this). Display-only context, excluded from all scores."}
   - {id: job_openings, name: "Job openings (JOLTS)", pillar: context, role: context, direction: normal,
-     series: jtsjol, lag_days: 65}
+     series: jtsjol, lag_days: 65,
+     blurb: "Unfilled job openings from the JOLTS survey — a gauge of how hot labor demand is. Falling openings are usually the first crack in a cooling job market, showing up before layoffs do. Display-only context, excluded from all scores."}
   - {id: fed_funds, name: "Fed funds rate (policy rate)", pillar: context, role: context, direction: normal,
-     series: fedfunds, lag_days: 3}
+     series: fedfunds, lag_days: 3,
+     blurb: "The Federal Reserve's policy interest rate — the overnight rate banks charge each other, which anchors borrowing costs across the economy. Rising means the Fed is braking, falling means stimulating. Display-only context; its inflation-adjusted version (the real Fed funds rate) IS scored in the liquidity pillar."}

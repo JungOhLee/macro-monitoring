@@ -35,6 +35,7 @@ class Indicator:
     series: str | None = None
     formula: str | None = None
     inputs: tuple[str, ...] | None = None
+    blurb: str | None = None
 
 
 @dataclass
@@ -97,6 +98,8 @@ def _validate(reg: Registry) -> None:
             errors.append(f"{i.id}: bad direction {i.direction}")
         if i.role not in VALID_ROLE:
             errors.append(f"{i.id}: bad role {i.role}")
+        if not i.blurb or not i.blurb.strip():
+            errors.append(f"{i.id}: missing blurb (plain-language definition is required)")
         if i.role == "context":
             # context indicators are display-only and deliberately not part of any real
             # pillar (pillar_weights); pillar must be the sentinel "context", paired 1:1

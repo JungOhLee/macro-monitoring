@@ -127,9 +127,27 @@ def test_context_role_and_pillar_pairing_accepted(tmp_path):
     ok.write_text(
         "pillar_weights: {valuation: 1.0}\n" + _one_series_yaml() +
         "indicators:\n"
-        "  - {id: x, name: X, pillar: context, role: context, direction: normal, series: s, lag_days: 1}\n"
+        "  - {id: x, name: X, pillar: context, role: context, direction: normal, series: s, lag_days: 1,\n"
+        "     blurb: 'A test context indicator used to check role/pillar pairing.'}\n"
     )
     reg = load_registry(ok)
     assert reg.indicators[0].pillar == "context"
     assert reg.indicators[0].role == "context"
     assert context_ids(reg) == {"x"}
+
+
+def test_missing_blurb_rejected(tmp_path):
+    bad = tmp_path / "registry.yaml"
+    bad.write_text(
+        "pillar_weights: {valuation: 1.0}\n" + _one_series_yaml() +
+        "indicators:\n"
+        "  - {id: x, name: X, pillar: valuation, role: timing, direction: normal, series: s, lag_days: 1}\n"
+    )
+    with pytest.raises(ValueError, match="missing blurb"):
+        load_registry(bad)
+
+
+def test_all_indicators_have_blurbs():
+    reg = load_registry()
+    for ind in reg.indicators:
+        assert ind.blurb and len(ind.blurb.split()) >= 8, ind.id
