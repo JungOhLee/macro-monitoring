@@ -215,12 +215,15 @@ fetch("data/indicators.json").then(r => r.json()).then(inds => {
   for (const d of Object.values(inds)) {
     if (d.blurb && byPillar.has(d.pillar)) byPillar.get(d.pillar).push(d);
   }
-  document.getElementById("glossary").outerHTML = PILLAR_ORDER.map(p => {
+  const html = PILLAR_ORDER.map(p => {
     const entries = byPillar.get(p).sort((a, b) => a.name.localeCompare(b.name));
     if (!entries.length) return "";
     return `<h4>${PILLAR_LABEL[p]}</h4><dl>` + entries.map(d =>
       `<dt>${d.name}</dt><dd>${d.blurb}</dd>`).join("") + "</dl>";
   }).join("");
+  const el = document.getElementById("glossary");
+  if (html) el.outerHTML = html;
+  else el.textContent = "Glossary unavailable (no definitions in indicator data).";
 }).catch(() => {
   document.getElementById("glossary").textContent =
     "Glossary unavailable (couldn't load indicator data).";

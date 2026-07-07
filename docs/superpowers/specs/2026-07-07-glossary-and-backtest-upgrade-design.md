@@ -20,7 +20,7 @@ Every indicator in `config/registry.yaml` gets a `blurb:` string:
 
 - Format: 1–2 sentences *what it is*, then 1 sentence *how to read it here*. Target
   ≤ ~60 words, plain language, no unexplained jargon.
-- For every `direction: invert` indicator (9 of them), the blurb MUST state that a
+- For every `direction: invert` indicator (10 of them), the blurb MUST state that a
   lower/more-negative raw value scores a HIGHER froth percentile, in words a
   non-specialist can follow. Example (10Y−3M): "The gap between 10-year and 3-month US
   Treasury yields. Below zero the curve is 'inverted' — short-term money costs more than

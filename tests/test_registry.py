@@ -151,3 +151,13 @@ def test_all_indicators_have_blurbs():
     reg = load_registry()
     for ind in reg.indicators:
         assert ind.blurb and len(ind.blurb.split()) >= 8, ind.id
+
+
+def test_invert_indicator_blurbs_state_the_flip():
+    # Every direction:invert blurb must tell the reader that a lower/negative raw
+    # value scores a HIGHER froth percentile -- the word HIGHER is the marker the
+    # registry blurbs use for this (see the glossary design, 2026-07-07).
+    reg = load_registry()
+    for ind in reg.indicators:
+        if ind.direction == "invert":
+            assert "HIGHER" in ind.blurb, ind.id
