@@ -145,3 +145,44 @@ def test_report_card_skips_criterion_false():
     rows = backtest.build_report_card(stage, engaged, spx, [
         {"id": "black1987", "name": "Black Monday", "peak": "1987-08-25", "criterion": False}])
     assert rows == []
+
+
+def test_alarm_runs_detection_and_classification():
+    months = pd.date_range("1999-01-29", "2001-12-31", freq="BME")   # 36 month-ends
+    engaged = pd.Series(False, index=months)
+    engaged.iloc[2:5] = True     # 1999-03..1999-05: ends BEFORE the window opens -> false alarm
+    engaged.iloc[20:23] = True   # 2000-09..2000-11: inside window -> warning
+    engaged.iloc[33:] = True     # 2001-10..2001-12: starts AFTER the peak -> false alarm
+    spx = pd.Series([100.0 * 1.01 ** i for i in range(36)], index=months)
+    eps = [{"id": "ep1", "name": "Episode 1", "peak": "2001-06-15"}]
+    runs = backtest.find_alarm_runs(engaged, spx, eps, replay_start="1999-01-01")
+    assert [(r["start"], r["end"], r["months"]) for r in runs] == [
+        ("1999-03-31", "1999-05-31", 3),
+        ("2000-09-29", "2000-11-30", 3),
+        ("2001-10-31", "2001-12-31", 3),
+    ]
+    assert [r["in_window"] for r in runs] == [False, True, False]
+    assert runs[1]["episode"] == "ep1" and runs[0]["episode"] is None
+    # rising 1%/mo market: +12m return ~12.68%, worst dip from a rising start is 0
+    assert runs[0]["fwd_12m_pct"] == pytest.approx(12.68, abs=0.01)
+    assert runs[0]["max_dd_12m_pct"] == 0.0
+    # last run starts at index 33; 33+12 is past the end -> fwd unknown, dd over what exists
+    assert runs[2]["fwd_12m_pct"] is None
+    assert runs[2]["max_dd_12m_pct"] == 0.0
+
+
+def test_alarm_runs_empty_when_never_engaged():
+    months = pd.date_range("1999-01-29", periods=12, freq="BME")
+    engaged = pd.Series(False, index=months)
+    spx = pd.Series(100.0, index=months)
+    assert backtest.find_alarm_runs(engaged, spx, [], replay_start="1999-01-01") == []
+
+
+def test_alarm_runs_ignore_control_and_pre_replay_episodes():
+    months = pd.date_range("1999-01-29", "2000-12-29", freq="BME")
+    engaged = pd.Series(True, index=months)   # one giant run
+    spx = pd.Series(100.0, index=months)
+    eps = [{"id": "old", "name": "Old", "peak": "1990-07-16"},
+           {"id": "ctl", "name": "Control", "peak": "2000-06-15", "control": True}]
+    runs = backtest.find_alarm_runs(engaged, spx, eps, replay_start="1999-01-01")
+    assert len(runs) == 1 and runs[0]["in_window"] is False and runs[0]["episode"] is None

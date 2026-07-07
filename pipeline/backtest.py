@@ -147,6 +147,55 @@ def build_report_card(stage: pd.Series, engaged: pd.Series, spx_m: pd.Series,
     return rows
 
 
+def find_alarm_runs(engaged: pd.Series, spx_m: pd.Series, episodes: list[dict],
+                    replay_start: str = REPLAY_START) -> list[dict]:
+    """Every maximal contiguous engaged==True run, classified against the peak-24m..peak
+    windows of non-control episodes whose peak falls inside the replay (criterion-false
+    episodes like black1987 still count as windows here -- an engaged run before a real
+    crash isn't a false alarm just because the criteria table skips that episode).
+    Attribution prefers the nearest peak on/after the run start. fwd_12m_pct is None when
+    12 months of future don't exist yet; max_dd_12m_pct uses whatever future does exist."""
+    start_ts = pd.Timestamp(replay_start)
+    windows = [(ep["id"], pd.Timestamp(ep["peak"]) - pd.DateOffset(months=24), pd.Timestamp(ep["peak"]))
+               for ep in episodes
+               if not ep.get("control") and pd.Timestamp(ep["peak"]) >= start_ts]
+    flags = engaged.astype(bool)
+    bounds: list[tuple] = []
+    run_start = prev = None
+    for date, flag in flags.items():
+        if flag and run_start is None:
+            run_start = date
+        if not flag and run_start is not None:
+            bounds.append((run_start, prev))
+            run_start = None
+        prev = date
+    if run_start is not None:
+        bounds.append((run_start, prev))
+
+    arr = spx_m.to_numpy(dtype=float)
+    out = []
+    for s, e in bounds:
+        overlapping = [(wid, wpeak) for wid, wstart, wpeak in windows if s <= wpeak and e >= wstart]
+        episode = None
+        if overlapping:
+            on_or_after = [w for w in overlapping if w[1] >= s]
+            episode = min(on_or_after or overlapping, key=lambda w: abs((w[1] - s).days))[0]
+        i = int(spx_m.index.get_loc(s))
+        j = i + 12
+        fwd = dd = None
+        if not pd.isna(arr[i]):
+            if j < len(arr) and not pd.isna(arr[j]):
+                fwd = round((arr[j] / arr[i] - 1.0) * 100.0, 2)
+            seg = arr[i: min(j, len(arr) - 1) + 1]
+            seg = seg[~pd.isna(seg)]
+            if len(seg):
+                dd = round((float(seg.min()) / arr[i] - 1.0) * 100.0, 2)
+        out.append({"start": s.strftime("%Y-%m-%d"), "end": e.strftime("%Y-%m-%d"),
+                    "months": _months_between(s, e) + 1, "in_window": episode is not None,
+                    "episode": episode, "fwd_12m_pct": fwd, "max_dd_12m_pct": dd})
+    return out
+
+
 def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> dict:
     months, stage_s, engaged_s, _state, result, _lagged = replay_monthly(reg, thresholds, raw, start)
 
@@ -185,7 +234,8 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
         "fwd_6m": forward_returns(spx, 6),
         "fwd_12m": forward_returns(spx, 12),
         "fwd_24m": forward_returns(spx, 24),
+        "report_card": build_report_card(stage_s, engaged_s, spx, epi_cfg["episodes"]),
+        "alarms": find_alarm_runs(engaged_s, spx, epi_cfg["episodes"]),
         "base_rate": {"threshold": ANALOG_HIGH_SIM_THRESHOLD, "n_high_outside": int(n_high_out),
                        "n_high_inside": int(n_high_in), "n_months": len(months)},
-        "report_card": build_report_card(stage_s, engaged_s, spx, epi_cfg["episodes"]),
     }
