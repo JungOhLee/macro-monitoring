@@ -64,3 +64,4 @@ article td, article th { padding:4px 8px; border-bottom:1px solid var(--line); t
 .compare-chip { background:var(--bg); }
 .chip-x { cursor:pointer; margin-left:5px; color:var(--muted); font-weight:600; }
 .chip-x:hover { color:var(--bubble); }
+.indicator-blurb { margin:8px 0 4px; max-width:75ch; }
