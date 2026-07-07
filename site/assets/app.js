@@ -341,90 +341,105 @@ function renderIndicator() {
   if (ids.length <= 1) {
     renderSingleIndicator(d);
   } else {
-    renderComparePct(ids);
-    renderCompareRaw(ids);
+    renderCompare(ids);
   }
 }
 
-// Exactly the pre-comparison-feature rendering: raw chart with S&P overlay + froth-pct
-// chart, both on their own single axis. Kept byte-for-byte in behavior so the 1-indicator
-// case has zero visual change.
+// ONE two-row figure, same construction as renderHistory(): a SINGLE shared x-axis (row
+// domains live on separate y-axes anchored to that one "x"), so zoom/pan sync is
+// structural rather than event-wired. Row 1 (top, taller) is the raw value line + the S&P
+// overlay; row 2 (bottom) is the froth-percentile line + its 80/90 guide lines. The pct
+// series typically starts well after the raw series (percentile qualification window), so
+// the x-axis is pinned to the UNION of both spans -- the pct line simply begins partway
+// across the shared timeline instead of on a separately-scaled axis.
 function renderSingleIndicator(d) {
-  const rawTraces = [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }];
+  const traces = [{ x: d.series.dates, y: d.series.values, name: "raw", line: { color: "#6ea8fe", width: 1.4 } }];
   if (HISTORY.spx) {
-    rawTraces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
-                     yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
-                     hovertemplate: "%{x|%Y-%m-%d} · %{y:,.0f}<extra>S&P 500</extra>" });
+    traces.push({ x: HISTORY.spx.dates, y: HISTORY.spx.values, name: "S&P 500 (log)",
+                  yaxis: "y2", line: { color: "#8b93a3", width: 1 }, opacity: 0.55,
+                  hovertemplate: "%{x|%Y-%m-%d} · %{y:,.0f}<extra>S&P 500</extra>" });
   }
-  Plotly.newPlot("indicator-raw", rawTraces,
-    { ...PLOT_BASE, height: 230, shapes: crisisShapes(),
-      xaxis: dateRange(d.series.dates),
-      yaxis: { title: { text: "raw value", font: { size: 11 } } },
+  traces.push({ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct",
+                yaxis: "y3", line: { color: "#e0b83c", width: 1.4 } });
+  traces.push({ ...crisisLabels(97), yaxis: "y3" });
+
+  // crisisShapes() already emits yref:"paper" -- used as-is so the dashed crisis lines
+  // span both rows. The 80/90 guide lines are anchored to yaxis3 (the pct row's own
+  // axis) so they never bleed onto the raw row above.
+  const shapes = [
+    ...crisisShapes(),
+    ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y, yref: "y3",
+                            line: { color: "#d64545", width: 1, dash: "dot" } })),
+  ];
+
+  Plotly.newPlot("indicator-chart", traces,
+    { ...PLOT_BASE, height: 460, shapes,
+      xaxis: unionDateRange([d.series.dates, d.pct_series.dates]),
+      yaxis: { domain: [0.38, 1], title: { text: "raw value", font: { size: 11 } } },
       yaxis2: { overlaying: "y", side: "right", type: "log", showgrid: false,
+                tickfont: { size: 9, color: "#8b93a3" } },
+      yaxis3: { domain: [0, 0.30], anchor: "x", range: [0, 100],
                 tickfont: { size: 9, color: "#8b93a3" } } }, CFG);
-  Plotly.newPlot("indicator-pct",
-    [{ x: d.pct_series.dates, y: d.pct_series.values, name: "froth pct", line: { color: "#e0b83c", width: 1.4 } },
-     crisisLabels(97)],
-    { ...PLOT_BASE, height: 200, yaxis: { range: [0, 100] },
-      xaxis: dateRange(d.pct_series.dates),
-      shapes: [
-        ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
-                                line: { color: "#d64545", width: 1, dash: "dot" } })),
-        ...crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
-      ] }, CFG);
 }
 
-// 2-4 indicators: percentiles are the comparable scale (that's what froth normalization is
-// for), so they overlay on ONE shared 0-100 y-axis. Raw units differ per indicator, so raw
-// values are never overlaid -- see renderCompareRaw's small multiples instead.
-function renderComparePct(ids) {
+// 2-4 indicators, ONE figure: row 1 (taller, "220px-equivalent" domain share) is every
+// selected indicator's percentile overlaid on ONE shared 0-100 axis -- the comparable
+// scale, since "rank versus own history" means the same thing regardless of units. Rows
+// 2..N+1 are raw small multiples, one per indicator, each on its own y-axis (raw units
+// aren't comparable the way percentiles are) with a paper-referenced row annotation
+// standing in for a legend. All rows anchor to the SAME single "x" axis (never a
+// per-row x2/x3/x4 the way the old two-figure small multiples faked a shared look), so
+// zoom/pan sync is structural, and the axis is pinned to the union of every selected
+// indicator's raw AND pct spans.
+function renderCompare(ids) {
+  const n = ids.length;
+  const gap = 0.03;
+  const pctW = 220, rowW = 140;
+  const totalW = pctW + rowW * n;
+  const avail = 1 - gap * n; // n gaps total: pct-row1, row1-row2, ..., row(n-1)-row(n)
+  const unit = avail / totalW;
+  const pctH = unit * pctW;
+  const rowH = unit * rowW;
+  const pctBottom = 1 - pctH;
+  const xr = unionDateRange(ids.flatMap(id => [INDICATORS[id].series.dates, INDICATORS[id].pct_series.dates]));
+
   const traces = ids.map((id, i) => {
     const d = INDICATORS[id];
     return { x: d.pct_series.dates, y: d.pct_series.values, name: d.name,
               line: { color: COMPARE_PALETTE[i % COMPARE_PALETTE.length], width: 1.6 } };
   });
   traces.push(crisisLabels(97));
-  Plotly.newPlot("indicator-pct", traces,
-    { ...PLOT_BASE, height: 230, yaxis: { range: [0, 100] },
-      xaxis: unionDateRange(ids.map(id => INDICATORS[id].pct_series.dates)),
-      legend: { orientation: "h", y: -0.22 },
-      shapes: [
-        ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
-                                line: { color: "#d64545", width: 1, dash: "dot" } })),
-        ...crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" })),
-      ] }, CFG);
-}
 
-// Small multiples: one stacked row per indicator, each with its OWN y-axis (raw units
-// aren't comparable across indicators the way percentiles are). All rows share one pinned
-// x-range (union of the selected series' spans) via identical explicit `range` on every
-// row's x-axis. crisisShapes() already emits yref:"paper" (0-1 spans the whole canvas
-// regardless of which row's x-axis positions it), so one shared shape list spans every row.
-function renderCompareRaw(ids) {
-  const n = ids.length;
-  const gap = 0.06;
-  const rowH = (1 - gap * (n - 1)) / n;
-  const xr = unionDateRange(ids.map(id => INDICATORS[id].series.dates));
-  const traces = [];
-  const layout = { ...PLOT_BASE, height: 140 * n + 40, showlegend: false,
-                   annotations: [], shapes: crisisShapes() };
+  const layout = { ...PLOT_BASE, height: 220 + 140 * n + 60,
+                   margin: { ...PLOT_BASE.margin, t: 34 },
+                   shapes: [
+                     ...crisisShapes(),
+                     ...[80, 90].map(y => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
+                                             line: { color: "#d64545", width: 1, dash: "dot" } })),
+                   ],
+                   annotations: [],
+                   xaxis: xr,
+                   yaxis: { domain: [pctBottom, 1], range: [0, 100],
+                            tickfont: { size: 9, color: "#8b93a3" } },
+                   legend: { orientation: "h", y: 1.1, x: 0 } };
+
+  let top = pctBottom - gap;
   ids.forEach((id, i) => {
     const d = INDICATORS[id];
-    const top = 1 - i * (rowH + gap);
     const bottom = top - rowH;
-    const suffix = i === 0 ? "" : String(i + 1);
-    traces.push({ x: d.series.dates, y: d.series.values, name: d.name,
-                  xaxis: "x" + suffix, yaxis: "y" + suffix,
+    const suffix = String(i + 2); // row axes start at 2 -- the pct row is axis 1 (unsuffixed)
+    traces.push({ x: d.series.dates, y: d.series.values, name: d.name, showlegend: false,
+                  yaxis: "y" + suffix,
                   line: { color: COMPARE_PALETTE[i % COMPARE_PALETTE.length], width: 1.3 } });
-    layout["xaxis" + suffix] = { domain: [0, 1], anchor: "y" + suffix, range: xr.range,
-                                  showticklabels: i === n - 1, tickfont: { size: 9, color: "#8b93a3" } };
-    layout["yaxis" + suffix] = { domain: [bottom, top], anchor: "x" + suffix,
+    layout["yaxis" + suffix] = { domain: [bottom, top], anchor: "x",
                                   tickfont: { size: 9, color: "#8b93a3" } };
     layout.annotations.push({ xref: "paper", yref: "paper", x: 0.01, y: top - 0.015,
                               xanchor: "left", yanchor: "top", showarrow: false,
                               text: d.name, font: { size: 10, color: "#8b93a3" } });
+    top = bottom - gap;
   });
-  Plotly.newPlot("indicator-raw", traces, layout, CFG);
+
+  Plotly.newPlot("indicator-chart", traces, layout, CFG);
 }
 
 function fmtContextValue(id, v) {
