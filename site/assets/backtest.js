@@ -57,9 +57,67 @@ function renderAlarms(bt) {
                  : `<p class="muted">None in ${bt.months.length} replayed months.</p>`);
 }
 
+function regimeOf(score, bands) {
+  if (score == null) return null;
+  for (const b of bands) if (score <= b.upper) return b.name;
+  return bands[bands.length - 1].name;
+}
+
+// One grouped-box figure: x = group label, one box trace per horizon.
+function fwdBoxFigure(elId, groups, bt, title) {
+  const horizons = [["fwd_6m", "6m"], ["fwd_12m", "12m"], ["fwd_24m", "24m"]];
+  const traces = horizons.map(([key, label]) => {
+    const x = [], y = [];
+    for (const g of groups) for (const i of g.idx) {
+      const v = bt[key][i];
+      if (v != null) { x.push(g.label); y.push(v); }
+    }
+    return { type: "box", name: label, x, y, boxpoints: false };
+  });
+  Plotly.newPlot(elId, traces, { ...DARK, boxmode: "group", height: 330,
+    margin: { l: 45, r: 15, t: 30, b: 60 }, title: { text: title, font: { size: 13 } },
+    yaxis: { title: { text: "forward return %" }, zeroline: true, zerolinecolor: "#8b93a3" },
+    legend: { orientation: "h", y: -0.25 } }, CFG);
+}
+
+function pctNegative12m(bt, idx) {
+  const vals = idx.map(i => bt.fwd_12m[i]).filter(v => v != null);
+  return vals.length ? Math.round(100 * vals.filter(v => v < 0).length / vals.length) : null;
+}
+
+function renderForwardReturns(bt) {
+  const n = bt.months.length;
+  const all = { label: `all (n=${n})`, idx: [...Array(n).keys()] };
+
+  const regimeGroups = bt.regime_bands.map(b => ({ name: b.name, label: b.name.replace("_", " "), idx: [] }));
+  bt.composite.forEach((c, i) => {
+    const r = regimeOf(c, bt.regime_bands);
+    if (r) regimeGroups.find(g => g.name === r).idx.push(i);
+  });
+  regimeGroups.forEach(g => { g.label = `${g.label} (n=${g.idx.length})`; });
+  fwdBoxFigure("bt-fwd-regime", [all, ...regimeGroups], bt,
+               "S&P 500 forward returns by composite regime at the time");
+
+  const stageGroups = [
+    { label: "stage 0", test: s => s === 0 },
+    { label: "stage 1–3", test: s => s >= 1 && s <= 3 },
+    { label: "stage ≥ 4", test: s => s >= 4 },
+  ].map(g => ({ label: g.label, idx: bt.stage.map((s, i) => g.test(s) ? i : -1).filter(i => i >= 0) }));
+  stageGroups.forEach(g => { g.label = `${g.label} (n=${g.idx.length})`; });
+  fwdBoxFigure("bt-fwd-stage", [all, ...stageGroups], bt,
+               "S&P 500 forward returns by sequence stage at the time");
+
+  const noteParts = [all, ...regimeGroups, ...stageGroups].map(g => {
+    const p = pctNegative12m(bt, g.idx);
+    return p == null ? null : `${g.label}: ${p}% of 12-month windows negative`;
+  }).filter(Boolean);
+  document.getElementById("bt-fwd-note").textContent = noteParts.join(" · ");
+}
+
 fetch("data/backtest.json").then(r => r.json()).then(bt => {
   renderReportCard(bt);
   renderChart(bt);
   renderCriteria(bt);
+  renderForwardReturns(bt);
   renderAlarms(bt);
 });
