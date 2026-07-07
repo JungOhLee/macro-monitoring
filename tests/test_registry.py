@@ -4,7 +4,10 @@ from pipeline.registry import context_ids, load_registry, load_thresholds
 
 def test_registry_loads_and_counts():
     reg = load_registry()
-    assert len(reg.series) == 32
+    # 2026-07-06: usrec added as a raw shading-input series (NBER recession dating,
+    # no indicator references it -- same pattern as spx) -- see the macro backdrop
+    # strip amendment in docs/superpowers/specs/2026-07-05-macro-monitor-design.md.
+    assert len(reg.series) == 33
     assert len(reg.indicators) == 28
     assert abs(sum(reg.pillar_weights.values()) - 1.0) < 1e-9
     assert set(reg.pillar_weights) == {"valuation", "leverage", "liquidity", "sentiment", "macro"}

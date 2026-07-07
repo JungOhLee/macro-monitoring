@@ -185,6 +185,80 @@ def test_export_includes_spx_overlay(site, monkeypatch):
     assert "spx" not in history["full"]
 
 
+def test_recession_spans_basic_two_runs():
+    # 3-month run gets its end extended to the last calendar day of its final month
+    # (FRED dates USREC at period START, so the raw observation date alone would
+    # understate how long the recession actually lasted); a single-month run still
+    # comes out start < end thanks to that same extension.
+    idx = pd.date_range("2000-01-01", periods=24, freq="MS")
+    vals = pd.Series(0.0, index=idx)
+    vals.loc["2000-03-01":"2000-05-01"] = 1.0
+    vals.loc["2001-01-01":"2001-01-01"] = 1.0
+    assert export.recession_spans(vals) == [
+        ["2000-03-01", "2000-05-31"],
+        ["2001-01-01", "2001-01-31"],
+    ]
+
+
+def test_recession_spans_empty_or_missing():
+    assert export.recession_spans(None) == []
+    assert export.recession_spans(pd.Series(dtype=float)) == []
+    all_zero = pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2, freq="MS"))
+    assert export.recession_spans(all_zero) == []
+
+
+def test_recession_spans_pairs_start_before_end_and_plausible_count():
+    # Synthetic, representative NBER-style history from 1854 through 2020: not the exact
+    # historical dates (those come from the real FRED USREC pull, committed separately as
+    # data/raw/usrec.csv), but structurally realistic -- a recurring ~5-year business cycle
+    # with ~1-year contractions gives a plausible pre-2007 recession count, with the two
+    # most recent, precisely-known real spans (GFC, COVID) appended verbatim so the
+    # known-recession/known-expansion assertions below are checking real history.
+    dates = pd.date_range("1854-01-01", "2020-12-01", freq="MS")
+    vals = pd.Series(0.0, index=dates)
+    cycle_start = pd.Timestamp("1854-06-01")
+    while cycle_start < pd.Timestamp("2007-01-01"):
+        vals.loc[cycle_start: cycle_start + pd.DateOffset(months=11)] = 1.0
+        cycle_start += pd.DateOffset(years=5)
+    vals.loc["2007-12-01":"2009-06-01"] = 1.0  # Great Recession (real NBER dates)
+    vals.loc["2020-02-01":"2020-04-01"] = 1.0  # COVID recession (real NBER dates)
+
+    spans = export.recession_spans(vals)
+    assert len(spans) >= 25  # NBER counts 34 recessions since 1854 as of 2020
+    for start, end in spans:
+        assert start < end
+    assert any(start <= "2008-06-01" <= end for start, end in spans)
+    assert not any(start <= "2015-06-01" <= end for start, end in spans)
+
+
+def test_export_includes_recessions_field(site, monkeypatch):
+    import pipeline.registry as registry
+
+    monkeypatch.setattr(registry, "load_episodes", lambda: EPI_STUB)
+    reg = make_reg(with_confirmation=True)
+    reg = Registry(
+        series=reg.series + [Series("usrec", "fred", "USREC", "monthly", 110, 90, 35)],
+        indicators=reg.indicators,
+        pillar_weights=reg.pillar_weights,
+    )
+    idx = pd.date_range("2007-01-01", periods=36, freq="MS")
+    vals = pd.Series(0.0, index=idx)
+    vals.loc["2007-12-01":"2009-06-01"] = 1.0
+    store.write_series("usrec", vals)
+
+    export.export_site(reg, THX)
+    history = json.loads((site / "history.json").read_text())
+    assert history["recessions"] == [["2007-12-01", "2009-06-30"]]
+
+
+def test_export_recessions_field_empty_when_no_usrec_series(site):
+    # No usrec series in the registry at all -- the field must still always be present,
+    # just empty, so the frontend never needs an existence guard.
+    export.export_site(make_reg(), THX)
+    history = json.loads((site / "history.json").read_text())
+    assert history["recessions"] == []
+
+
 def test_downsample_never_exceeds_max():
     for n in (999, 1000, 1001, 2000, 2500, 3000, 5000, 10000):
         s = pd.Series(range(n), index=pd.date_range("1990-01-01", periods=n))

@@ -35,6 +35,10 @@ series:
   - {id: dtwexm,      source: fred, source_id: DTWEXM,      frequency: weekly,    staleness_budget_days: 36500, revision_window_days: 0, lag_days: 1}  # discontinued 2019; splice donor only
   - {id: sahmrealtime, source: fred, source_id: SAHMREALTIME, frequency: monthly, staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
   - {id: cfnai,       source: fred, source_id: CFNAI,       frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 400, lag_days: 25}
+  # ---- FRED (NBER recession dating, 2026-07-06 -- raw shading input only, same pattern as
+  # spx below: NO indicator references it. Monthly 0/1, history to 1854; conventions copied
+  # from unrate's monthly line below.) ----
+  - {id: usrec,       source: fred, source_id: USREC,       frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 90,  lag_days: 35}
   # ---- FRED (macro context indicators, 2026-07-06 -- display-only role, see indicators section) ----
   - {id: cpiaucsl,    source: fred, source_id: CPIAUCSL,    frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}
   - {id: ppiaco,      source: fred, source_id: PPIACO,      frequency: monthly,   staleness_budget_days: 110,  revision_window_days: 60,  lag_days: 14}

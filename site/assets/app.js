@@ -38,6 +38,15 @@ const CFG = { displayModeBar:false, responsive:true };
 const CONTEXT_IDS = ["cpi_yoy", "core_cpi_yoy", "ppi_yoy", "payrolls_yoy", "unemployment", "job_openings", "fed_funds"];
 const CONTEXT_LABEL = { cpi_yoy:"CPI YoY", core_cpi_yoy:"Core CPI", ppi_yoy:"PPI YoY",
   payrolls_yoy:"Payrolls YoY", unemployment:"Unemployment", job_openings:"Job openings", fed_funds:"Fed funds" };
+// "Macro backdrop" strip under the Score History chart: the same context indicators as
+// CONTEXT_IDS above, minus job_openings (a thousands-level, not a percent -- it can't share
+// the "%" y-axis the rest of these sit on). CPI and the policy rate default to visible since
+// they're the two most commonly-referenced series; the rest start "legendonly" to keep the
+// strip readable, one click away in the legend.
+const BACKDROP_IDS = ["cpi_yoy", "core_cpi_yoy", "ppi_yoy", "payrolls_yoy", "unemployment", "fed_funds"];
+const BACKDROP_DEFAULT_VISIBLE = new Set(["cpi_yoy", "fed_funds"]);
+const BACKDROP_COLOR = { cpi_yoy:"#6ea8fe", core_cpi_yoy:"#8b93a3", ppi_yoy:"#b98cce",
+  payrolls_yoy:"#4caf7d", unemployment:"#d64545", fed_funds:"#e0b83c" };
 // Distinct line colors for the multi-indicator compare views, reusing hues already
 // established elsewhere in the palette (raw-line blue, froth-pct amber, cool green, bubble red).
 const COMPARE_PALETTE = ["#6ea8fe", "#e0b83c", "#4caf7d", "#d64545"];
@@ -148,6 +157,29 @@ function crisisLabels(yPos) {
   };
 }
 
+// Row 2 of the Score History figure: one thin line per percent-scale context indicator,
+// all sharing the "y3" axis. Guards on the indicator actually being present in INDICATORS
+// (display-only context indicators could in principle be absent from a given data build).
+function macroBackdropTraces() {
+  return BACKDROP_IDS.map(id => {
+    const d = INDICATORS[id];
+    if (!d) return null;
+    return { x: d.series.dates, y: d.series.values, name: CONTEXT_LABEL[id], yaxis: "y3",
+             line: { color: BACKDROP_COLOR[id], width: 1.2 },
+             visible: BACKDROP_DEFAULT_VISIBLE.has(id) ? true : "legendonly" };
+  }).filter(Boolean);
+}
+
+// Official NBER recession shading (HISTORY.recessions, [start, end] ISO-date pairs) --
+// descriptive government dating, not this site's own judgment call. yref:"paper" spans the
+// full figure height so the bands read across both the score row and the backdrop row.
+function recessionShapes() {
+  return (HISTORY.recessions || []).map(([start, end]) => ({
+    type: "rect", xref: "x", yref: "paper", x0: start, x1: end, y0: 0, y1: 1,
+    fillcolor: "rgba(139,147,163,0.14)", line: { width: 0 }, layer: "below",
+  }));
+}
+
 // Plotly's autorange includes shape/marker x-values even when far outside the
 // actual data series (e.g. an 1929 crisis marker on a chart whose real data
 // starts in 1990). Pin the x-axis to the plotted series' own span so
@@ -200,18 +232,33 @@ function renderHistory() {
                   hovertemplate: "%{x|%Y-%m-%d} · %{y:,.0f}<extra>S&P 500</extra>" });
   }
   traces.push(crisisLabels(97));
-  const shapes = crisisShapes().map(s => ({ ...s, y0: 0, y1: 100, yref: "y" }));
+  traces.push(...macroBackdropTraces());
+
+  // crisisShapes() already emits yref:"paper", y0:0, y1:1 -- unlike the drill-down charts
+  // (which override that to a single axis' own 0-100 range since they're one row), this
+  // figure has TWO rows now, so the paper-referenced form is used as-is here specifically
+  // so the vertical crisis lines span both the score row and the backdrop row beneath it.
+  const shapes = [...recessionShapes(), ...crisisShapes()];
   const [e1, e2, e3] = regimeEdges();
   const bands = [[0,e1,"rgba(76,175,125,.05)"],[e1,e2,"rgba(224,184,60,.05)"],
                  [e2,e3,"rgba(224,123,60,.06)"],[e3,100,"rgba(214,69,69,.08)"]];
+  // Regime bands stay yref:"y" (row 1's own axis, still ranged 0-100) -- with that axis'
+  // domain now confined to [0.38, 1], these rects render only behind row 1, never row 2.
   for (const [y0,y1,c] of bands)
     shapes.push({ type:"rect", xref:"paper", x0:0, x1:1, y0, y1, fillcolor:c, line:{width:0} });
   Plotly.newPlot("history", traces,
-    { ...PLOT_BASE, height: 340, shapes, yaxis: { range: [0, 100] },
+    { ...PLOT_BASE, height: 520, shapes,
+      yaxis: { domain: [0.38, 1], range: [0, 100] },
       yaxis2: { overlaying: "y", side: "right", type: "log", showgrid: false,
                 tickfont: { size: 9, color: "#8b93a3" } },
+      // Row 2, "Macro backdrop": own y-axis (percent scale, own domain), anchored to the
+      // SAME xaxis "x" as row 1 -- there is only one x-axis on this whole figure, which is
+      // what makes zoom/pan sync between the two rows structural rather than something that
+      // needs Plotly's `matches` axis-linking (unsupported by the vendored partial bundle).
+      yaxis3: { domain: [0, 0.30], anchor: "x", title: { text: "%", font: { size: 10 } },
+                tickfont: { size: 9, color: "#8b93a3" } },
       xaxis: dateRange(h.dates),
-      legend: { orientation: "h", y: -0.15 } }, CFG);
+      legend: { orientation: "h", y: -0.12 } }, CFG);
 }
 
 function initPicker() {

@@ -31,6 +31,34 @@ def _series_json(s: pd.Series, max_points: int = 1000) -> dict:
             "values": [_r(v) for v in ds.to_numpy()]}
 
 
+def recession_spans(s: pd.Series | None) -> list:
+    """[start_iso, end_iso] pairs for each contiguous run of USREC==1 (NBER recession
+    indicator). `end` is extended to the last calendar day of the run's final month --
+    FRED dates monthly observations at period START, so the raw last-observation date
+    alone would understate how long the recession actually lasted and could even equal
+    `start` for a single-month run. Always returns a list (empty if `s` is None/empty),
+    so callers never need an existence guard."""
+    if s is None or s.empty:
+        return []
+    flags = s.dropna() >= 0.5
+    spans: list[tuple] = []
+    start = None
+    prev = None
+    for date, flag in flags.items():
+        if flag and start is None:
+            start = date
+        if not flag and start is not None:
+            spans.append((start, prev))
+            start = None
+        prev = date
+    if start is not None:
+        spans.append((start, prev))
+    return [
+        [start.strftime("%Y-%m-%d"), (end + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")]
+        for start, end in spans
+    ]
+
+
 def _atomic_write(fp, obj) -> None:
     fp.parent.mkdir(parents=True, exist_ok=True)
     tmp = fp.with_suffix(".tmp")
@@ -146,6 +174,10 @@ def export_site(reg: Registry, thresholds: dict) -> dict:
     spx_raw = raw.get("spx")
     if spx_raw is not None and not spx_raw.empty:
         history["spx"] = _series_json(spx_raw)
+    # NBER recession shading input (raw 0/1 series, no indicator) -- same top-level,
+    # not-windowed pattern as spx above, since recession dating doesn't change with the
+    # full/rolling-20y toggle. Always present (empty list if usrec is missing).
+    history["recessions"] = recession_spans(raw.get("usrec"))
     for window in ("full", "rolling20y"):
         cw = result.composite[result.composite.window == window].set_index("date")
         if cw.empty:
