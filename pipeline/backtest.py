@@ -235,7 +235,7 @@ def run_backtest(reg, thresholds, raw, epi_cfg, start: str = REPLAY_START) -> di
         "fwd_12m": forward_returns(spx, 12),
         "fwd_24m": forward_returns(spx, 24),
         "report_card": build_report_card(stage_s, engaged_s, spx, epi_cfg["episodes"]),
-        "alarms": find_alarm_runs(engaged_s, spx, epi_cfg["episodes"]),
+        "alarms": find_alarm_runs(engaged_s, spx, epi_cfg["episodes"], start),
         "base_rate": {"threshold": ANALOG_HIGH_SIM_THRESHOLD, "n_high_outside": int(n_high_out),
                        "n_high_inside": int(n_high_in), "n_months": len(months)},
     }
