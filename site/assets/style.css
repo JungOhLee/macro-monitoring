@@ -65,3 +65,6 @@ article td, article th { padding:4px 8px; border-bottom:1px solid var(--line); t
 .chip-x { cursor:pointer; margin-left:5px; color:var(--muted); font-weight:600; }
 .chip-x:hover { color:var(--bubble); }
 .indicator-blurb { margin:8px 0 4px; max-width:75ch; }
+article dt { font-weight:600; margin-top:10px; }
+article dd { margin:2px 0 6px; color:var(--muted); }
+article h4 { margin:14px 0 2px; font-size:.95rem; }

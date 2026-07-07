@@ -143,7 +143,11 @@ that peak &mdash; the margin-debt series doesn't reach far enough back to qualif
 data-coverage gap), and the yield curve's re-steepening arrived only after the March
 2000 peak, so a second early-warning stage was never available in time. The standing rule behind every number on this site: thresholds are only
 changed when new evidence is written down in advance, never adjusted after the fact just
-to turn a failing check green.</p>
+to turn a failing check green. Beyond the pass/fail criteria, the Backtest page also shows a per-crisis report card (when
+the tracker engaged and how much lead time it gave), a full ledger of engaged stretches
+including false alarms, the S&amp;P 500 returns that historically followed each composite
+band and tracker stage, and a deliberately crude "cost of caution" simulator showing what
+acting on these signals would have saved &mdash; or cost &mdash; versus simply holding on.</p>
 
 <h2>10. Data freshness &amp; caveats</h2>
 <p>Every series updates automatically once a day through a scheduled job (with a same-day
@@ -156,6 +160,72 @@ reflects what would have been knowable as of that date, with no hindsight baked 
 Standing caveat, worth repeating: this dashboard is a study tool for understanding how
 past crises built up and whether today rhymes with them. It is not investment advice, and
 no single reading here should be treated as a buy, sell, or timing signal.</p>
+
+<h2>11. Glossary</h2>
+<h3>Concepts used throughout</h3>
+<dl>
+<dt>Percentile</dt>
+<dd>Where today's value ranks against every past value of the same series: 90th percentile
+means higher than 90% of history. All "froth" scores on this site are percentiles, so every
+indicator is measured against its own past rather than in raw units.</dd>
+<dt>Z-score</dt>
+<dd>How many standard deviations today's value sits from its historical average; beyond
+&plusmn;2 is rare territory. Shown as a chip in the indicator drill-down.</dd>
+<dt>Direction ("inverted" indicators)</dt>
+<dd>For most indicators a higher raw value means more froth. For inverted ones (VIX, credit
+spreads, the two yield-curve spreads, the real Fed funds rate, the equity risk premium,
+SLOOS, breadth, S&amp;P vs 200-DMA) it's the low or negative readings that signal froth or
+stress, so their percentile flips the raw ranking. Each indicator's glossary entry below
+says which way it points.</dd>
+<dt>Yield curve &amp; inversion</dt>
+<dd>The yield curve is the lineup of Treasury interest rates from short to long maturities.
+Normally long rates are higher. When short rates exceed long ones the curve is "inverted"
+&mdash; historically the most reliable US recession precursor, though with long and variable
+lead times.</dd>
+<dt>Credit spread</dt>
+<dd>The extra yield a riskier borrower must pay over Treasuries. Wide spreads = fear and
+tight credit; narrow spreads = complacency and easy credit.</dd>
+<dt>Drawdown</dt>
+<dd>The percentage fall from a peak to a later low. "Max drawdown" is the worst such fall
+over a period &mdash; the number that measures how painful a crash was.</dd>
+<dt>200-day moving average (200-DMA)</dt>
+<dd>The average of the last 200 trading days' closing prices &mdash; the standard dividing
+line between a long-term uptrend (price above) and downtrend (price below).</dd>
+<dt>Market breadth</dt>
+<dd>How widely shared a rally is across stocks. Narrow breadth &mdash; a few giant companies
+carrying the index while the average stock lags &mdash; is a classic late-cycle warning.</dd>
+<dt>NBER recession</dt>
+<dd>The "official" US recession dates, declared retrospectively by the National Bureau of
+Economic Research. Chart shading only &mdash; descriptive history, not a signal.</dd>
+<dt>T&minus;24m notation</dt>
+<dd>Months before an episode's market peak: "dotcom T&minus;24" means the state of things 24
+months before the March 2000 top; "T+6" means six months after it.</dd>
+</dl>
+<h3>Indicator glossary</h3>
+<p class="muted">Generated from the same indicator registry that drives every score on this
+site, so it always matches what the dashboard is actually computing.</p>
+<div id="glossary" class="muted">Loading definitions&hellip;</div>
+<script>
+const PILLAR_ORDER = ["valuation", "leverage", "liquidity", "sentiment", "macro", "context"];
+const PILLAR_LABEL = { valuation: "Valuation", leverage: "Leverage & credit",
+  liquidity: "Liquidity & monetary", sentiment: "Sentiment & speculation",
+  macro: "Macro stress & breadth", context: "Context (not scored)" };
+fetch("data/indicators.json").then(r => r.json()).then(inds => {
+  const byPillar = new Map(PILLAR_ORDER.map(p => [p, []]));
+  for (const d of Object.values(inds)) {
+    if (d.blurb && byPillar.has(d.pillar)) byPillar.get(d.pillar).push(d);
+  }
+  document.getElementById("glossary").outerHTML = PILLAR_ORDER.map(p => {
+    const entries = byPillar.get(p).sort((a, b) => a.name.localeCompare(b.name));
+    if (!entries.length) return "";
+    return `<h4>${PILLAR_LABEL[p]}</h4><dl>` + entries.map(d =>
+      `<dt>${d.name}</dt><dd>${d.blurb}</dd>`).join("") + "</dl>";
+  }).join("");
+}).catch(() => {
+  document.getElementById("glossary").textContent =
+    "Glossary unavailable (couldn't load indicator data).";
+});
+</script>
 </article>
 <footer class="muted">Monitoring context, not a trading signal.</footer>
 </body>
