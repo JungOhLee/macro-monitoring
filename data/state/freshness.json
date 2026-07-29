@@ -2,199 +2,199 @@
  "baa10y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:42+00:00",
-  "last_obs": "2026-07-27"
+  "last_fetch": "2026-07-29T22:15:52+00:00",
+  "last_obs": "2026-07-28"
  },
  "bamlh0a0hym2": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:44+00:00",
-  "last_obs": "2026-07-27"
+  "last_fetch": "2026-07-29T22:15:53+00:00",
+  "last_obs": "2026-07-28"
  },
  "bcnsdodns": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:39+00:00",
+  "last_fetch": "2026-07-29T22:15:50+00:00",
   "last_obs": "2026-01-01"
  },
  "btcusd": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:52+00:00",
+  "last_fetch": "2026-07-29T22:16:00+00:00",
   "last_obs": "2026-07-29"
  },
  "cfnai": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:47+00:00",
+  "last_fetch": "2026-07-29T22:15:55+00:00",
   "last_obs": "2026-06-01"
  },
  "cmdebt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:38+00:00",
+  "last_fetch": "2026-07-29T22:15:50+00:00",
   "last_obs": "2026-01-01"
  },
  "cpiaucsl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:48+00:00",
+  "last_fetch": "2026-07-29T22:15:56+00:00",
   "last_obs": "2026-06-01"
  },
  "cpilfesl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:42+00:00",
+  "last_fetch": "2026-07-29T22:15:52+00:00",
   "last_obs": "2026-06-01"
  },
  "dfii10": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:44+00:00",
-  "last_obs": "2026-07-27"
+  "last_fetch": "2026-07-29T22:15:52+00:00",
+  "last_obs": "2026-07-28"
  },
  "drtscilm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:39+00:00",
+  "last_fetch": "2026-07-29T22:15:50+00:00",
   "last_obs": "2026-04-01"
  },
  "dtwexbgs": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:46+00:00",
+  "last_fetch": "2026-07-29T22:15:54+00:00",
   "last_obs": "2026-07-24"
  },
  "dtwexm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:47+00:00",
+  "last_fetch": "2026-07-29T22:15:55+00:00",
   "last_obs": "2019-12-31"
  },
  "fedfunds": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:41+00:00",
+  "last_fetch": "2026-07-29T22:15:51+00:00",
   "last_obs": "2026-06-01"
  },
  "gdp": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:38+00:00",
+  "last_fetch": "2026-07-29T22:15:49+00:00",
   "last_obs": "2026-01-01"
  },
  "jtsjol": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:49+00:00",
+  "last_fetch": "2026-07-29T22:15:57+00:00",
   "last_obs": "2026-05-01"
  },
  "m2sl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:39+00:00",
+  "last_fetch": "2026-07-29T22:15:51+00:00",
   "last_obs": "2026-06-01"
  },
  "margin_debt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:55+00:00",
+  "last_fetch": "2026-07-29T22:16:02+00:00",
   "last_obs": "2026-05-01"
  },
  "ncbeilq027s": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:38+00:00",
+  "last_fetch": "2026-07-29T22:15:49+00:00",
   "last_obs": "2026-01-01"
  },
  "payems": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:49+00:00",
+  "last_fetch": "2026-07-29T22:15:57+00:00",
   "last_obs": "2026-06-01"
  },
  "ppiaco": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:49+00:00",
+  "last_fetch": "2026-07-29T22:15:56+00:00",
   "last_obs": "2026-06-01"
  },
  "rrpontsyd": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:41+00:00",
-  "last_obs": "2026-07-28"
+  "last_fetch": "2026-07-29T22:15:51+00:00",
+  "last_obs": "2026-07-29"
  },
  "rsp": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:51+00:00",
-  "last_obs": "2026-07-28"
+  "last_fetch": "2026-07-29T22:15:58+00:00",
+  "last_obs": "2026-07-29"
  },
  "sahmrealtime": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:47+00:00",
+  "last_fetch": "2026-07-29T22:15:55+00:00",
   "last_obs": "2026-06-01"
  },
  "shiller_cape": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:54+00:00",
+  "last_fetch": "2026-07-29T22:16:01+00:00",
   "last_obs": "2026-07-01"
  },
  "spx": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:50+00:00",
+  "last_fetch": "2026-07-29T22:15:57+00:00",
   "last_obs": "2026-07-28"
  },
  "spy": {
-  "error": "RuntimeError: Alpha Vantage Information response for SPY: Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly (1 request per second). You may subscribe to any of the premium plans at https://www.alphavantage; yahoo fallback: RuntimeError: Yahoo HTTP 429 for SPY",
-  "fetch_ok": false,
-  "last_fetch": "2026-07-29T13:06:52+00:00",
-  "last_obs": "2026-07-28"
+  "error": null,
+  "fetch_ok": true,
+  "last_fetch": "2026-07-29T22:15:58+00:00",
+  "last_obs": "2026-07-29"
  },
  "t10y2y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:45+00:00",
-  "last_obs": "2026-07-28"
+  "last_fetch": "2026-07-29T22:15:53+00:00",
+  "last_obs": "2026-07-29"
  },
  "t10y3m": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:45+00:00",
-  "last_obs": "2026-07-28"
+  "last_fetch": "2026-07-29T22:15:54+00:00",
+  "last_obs": "2026-07-29"
  },
  "unrate": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:49+00:00",
+  "last_fetch": "2026-07-29T22:15:57+00:00",
   "last_obs": "2026-06-01"
  },
  "usrec": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:48+00:00",
+  "last_fetch": "2026-07-29T22:15:56+00:00",
   "last_obs": "2026-06-01"
  },
  "vixcls": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:46+00:00",
-  "last_obs": "2026-07-27"
+  "last_fetch": "2026-07-29T22:15:54+00:00",
+  "last_obs": "2026-07-28"
  },
  "walcl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:40+00:00",
+  "last_fetch": "2026-07-29T22:15:51+00:00",
   "last_obs": "2026-07-22"
  },
  "wtregen": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-07-29T13:06:40+00:00",
+  "last_fetch": "2026-07-29T22:15:51+00:00",
   "last_obs": "2026-07-22"
  }
 }
