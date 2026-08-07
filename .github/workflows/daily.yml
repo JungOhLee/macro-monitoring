@@ -72,9 +72,14 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     steps:
+      # deploy-pages hard-caps its timeout at 10m, so a slow Pages queue can't be
+      # waited out -- it has to be retried. A queued deployment is cancelled on
+      # timeout, so the second attempt starts a fresh one.
       - id: deployment
         uses: actions/deploy-pages@v5
-        with:
-          timeout: 1200000   # 20m; Pages can sit in deployment_queued well past the 10m default
+        continue-on-error: true
+      - id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v5
