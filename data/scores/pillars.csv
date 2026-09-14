@@ -101426,3 +101426,13 @@ date,window,pillar,score
 2026-09-11,rolling20y,macro,73.29
 2026-09-11,rolling20y,sentiment,30.62
 2026-09-11,rolling20y,valuation,98.06
+2026-09-14,full,leverage,79.63
+2026-09-14,full,liquidity,44.43
+2026-09-14,full,macro,76.83
+2026-09-14,full,sentiment,38.34
+2026-09-14,full,valuation,99.4
+2026-09-14,rolling20y,leverage,63.02
+2026-09-14,rolling20y,liquidity,40.6
+2026-09-14,rolling20y,macro,73.91
+2026-09-14,rolling20y,sentiment,38.01
+2026-09-14,rolling20y,valuation,99.31
