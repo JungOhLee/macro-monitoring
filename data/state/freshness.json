@@ -2,199 +2,199 @@
  "baa10y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:44+00:00",
-  "last_obs": "2026-09-22"
+  "last_fetch": "2026-09-24T23:54:04+00:00",
+  "last_obs": "2026-09-23"
  },
  "bamlh0a0hym2": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:45+00:00",
+  "last_fetch": "2026-09-24T23:54:04+00:00",
   "last_obs": "2026-09-23"
  },
  "bcnsdodns": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:41+00:00",
+  "last_fetch": "2026-09-24T23:54:01+00:00",
   "last_obs": "2026-04-01"
  },
  "btcusd": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:53+00:00",
+  "error": "RuntimeError: Alpha Vantage Information response for BTC: We have detected your API key as *** and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage.co/premium/ to instantly remove al; yahoo fallback: RuntimeError: Yahoo HTTP 429 for BTC-USD",
+  "fetch_ok": false,
+  "last_fetch": "2026-09-24T23:54:11+00:00",
   "last_obs": "2026-09-24"
  },
  "cfnai": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:48+00:00",
+  "last_fetch": "2026-09-24T23:54:07+00:00",
   "last_obs": "2026-08-01"
  },
  "cmdebt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:41+00:00",
+  "last_fetch": "2026-09-24T23:54:00+00:00",
   "last_obs": "2026-04-01"
  },
  "cpiaucsl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:49+00:00",
+  "last_fetch": "2026-09-24T23:54:08+00:00",
   "last_obs": "2026-08-01"
  },
  "cpilfesl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:43+00:00",
+  "last_fetch": "2026-09-24T23:54:03+00:00",
   "last_obs": "2026-08-01"
  },
  "dfii10": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:44+00:00",
-  "last_obs": "2026-09-22"
+  "last_fetch": "2026-09-24T23:54:04+00:00",
+  "last_obs": "2026-09-23"
  },
  "drtscilm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:41+00:00",
+  "last_fetch": "2026-09-24T23:54:02+00:00",
   "last_obs": "2026-07-01"
  },
  "dtwexbgs": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:46+00:00",
+  "last_fetch": "2026-09-24T23:54:06+00:00",
   "last_obs": "2026-09-18"
  },
  "dtwexm": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:47+00:00",
+  "last_fetch": "2026-09-24T23:54:06+00:00",
   "last_obs": "2019-12-31"
  },
  "fedfunds": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:43+00:00",
+  "last_fetch": "2026-09-24T23:54:03+00:00",
   "last_obs": "2026-08-01"
  },
  "gdp": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:40+00:00",
+  "last_fetch": "2026-09-24T23:53:59+00:00",
   "last_obs": "2026-04-01"
  },
  "jtsjol": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:51+00:00",
+  "last_fetch": "2026-09-24T23:54:09+00:00",
   "last_obs": "2026-07-01"
  },
  "m2sl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:42+00:00",
+  "last_fetch": "2026-09-24T23:54:02+00:00",
   "last_obs": "2026-08-01"
  },
  "margin_debt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:55+00:00",
+  "last_fetch": "2026-09-24T23:54:13+00:00",
   "last_obs": "2026-05-01"
  },
  "ncbeilq027s": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:39+00:00",
+  "last_fetch": "2026-09-24T23:53:59+00:00",
   "last_obs": "2026-04-01"
  },
  "payems": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:50+00:00",
+  "last_fetch": "2026-09-24T23:54:08+00:00",
   "last_obs": "2026-08-01"
  },
  "ppiaco": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:49+00:00",
+  "last_fetch": "2026-09-24T23:54:08+00:00",
   "last_obs": "2026-08-01"
  },
  "rrpontsyd": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:43+00:00",
-  "last_obs": "2026-09-23"
+  "last_fetch": "2026-09-24T23:54:02+00:00",
+  "last_obs": "2026-09-24"
  },
  "rsp": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:51+00:00",
+  "error": "RuntimeError: Alpha Vantage Information response for RSP: We have detected your API key as *** and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage.co/premium/ to instantly remove al; yahoo fallback: RuntimeError: Yahoo HTTP 429 for RSP",
+  "fetch_ok": false,
+  "last_fetch": "2026-09-24T23:54:09+00:00",
   "last_obs": "2026-09-23"
  },
  "sahmrealtime": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:48+00:00",
+  "last_fetch": "2026-09-24T23:54:07+00:00",
   "last_obs": "2026-08-01"
  },
  "shiller_cape": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:55+00:00",
+  "last_fetch": "2026-09-24T23:54:13+00:00",
   "last_obs": "2026-07-01"
  },
  "spx": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:51+00:00",
+  "last_fetch": "2026-09-24T23:54:09+00:00",
   "last_obs": "2026-09-23"
  },
  "spy": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:52+00:00",
+  "error": "RuntimeError: Alpha Vantage Information response for SPY: We have detected your API key as *** and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage.co/premium/ to instantly remove al; yahoo fallback: RuntimeError: Yahoo HTTP 429 for SPY",
+  "fetch_ok": false,
+  "last_fetch": "2026-09-24T23:54:10+00:00",
   "last_obs": "2026-09-23"
  },
  "t10y2y": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:45+00:00",
-  "last_obs": "2026-09-23"
+  "last_fetch": "2026-09-24T23:54:05+00:00",
+  "last_obs": "2026-09-24"
  },
  "t10y3m": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:46+00:00",
-  "last_obs": "2026-09-23"
+  "last_fetch": "2026-09-24T23:54:05+00:00",
+  "last_obs": "2026-09-24"
  },
  "unrate": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:50+00:00",
+  "last_fetch": "2026-09-24T23:54:08+00:00",
   "last_obs": "2026-08-01"
  },
  "usrec": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:49+00:00",
+  "last_fetch": "2026-09-24T23:54:07+00:00",
   "last_obs": "2026-08-01"
  },
  "vixcls": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:46+00:00",
+  "last_fetch": "2026-09-24T23:54:06+00:00",
   "last_obs": "2026-09-22"
  },
  "walcl": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:42+00:00",
-  "last_obs": "2026-09-16"
+  "last_fetch": "2026-09-24T23:54:02+00:00",
+  "last_obs": "2026-09-23"
  },
  "wtregen": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-09-24T15:48:42+00:00",
-  "last_obs": "2026-09-16"
+  "last_fetch": "2026-09-24T23:54:02+00:00",
+  "last_obs": "2026-09-23"
  }
 }
