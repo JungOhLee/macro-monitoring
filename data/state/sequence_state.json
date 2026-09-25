@@ -1,13 +1,13 @@
 {
- "as_of": "2026-09-24",
+ "as_of": "2026-09-25",
  "engaged": true,
- "current_stage": 3,
+ "current_stage": 5,
  "stages": {
   "1": {
    "fired": true,
    "fired_date": "2022-10-31",
    "lapsed": false,
-   "last_true": "2026-09-24"
+   "last_true": "2026-09-25"
   },
   "2": {
    "fired": true,
@@ -19,7 +19,7 @@
    "fired": true,
    "fired_date": "2025-12-31",
    "lapsed": false,
-   "last_true": "2026-09-24"
+   "last_true": "2026-09-25"
   },
   "4": {
    "fired": true,
@@ -29,9 +29,9 @@
   },
   "5": {
    "fired": true,
-   "fired_date": "2025-06-30",
-   "lapsed": true,
-   "last_true": "2025-06-30"
+   "fired_date": "2026-09-25",
+   "lapsed": false,
+   "last_true": "2026-09-25"
   },
   "6": {
    "fired": true,
