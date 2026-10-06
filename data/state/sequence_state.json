@@ -1,5 +1,5 @@
 {
- "as_of": "2026-10-04",
+ "as_of": "2026-10-06",
  "engaged": true,
  "current_stage": 5,
  "stages": {
@@ -7,7 +7,7 @@
    "fired": true,
    "fired_date": "2022-10-31",
    "lapsed": false,
-   "last_true": "2026-10-04"
+   "last_true": "2026-10-06"
   },
   "2": {
    "fired": true,
@@ -19,7 +19,7 @@
    "fired": true,
    "fired_date": "2025-12-31",
    "lapsed": false,
-   "last_true": "2026-10-04"
+   "last_true": "2026-10-06"
   },
   "4": {
    "fired": true,
