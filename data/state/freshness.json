@@ -1,200 +1,200 @@
 {
  "baa10y": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:21+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for BAA10Y",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:03+00:00",
   "last_obs": "2026-10-19"
  },
  "bamlh0a0hym2": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:22+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for BAMLH0A0HYM2",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:04+00:00",
   "last_obs": "2026-10-19"
  },
  "bcnsdodns": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:19+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for BCNSDODNS",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-04-01"
  },
  "btcusd": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:28+00:00",
-  "last_obs": "2026-10-20"
+  "last_fetch": "2026-10-21T15:56:09+00:00",
+  "last_obs": "2026-10-21"
  },
  "cfnai": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:24+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for CFNAI",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-08-01"
  },
  "cmdebt": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:19+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for CMDEBT",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-04-01"
  },
  "cpiaucsl": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:24+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for CPIAUCSL",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-09-01"
  },
  "cpilfesl": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:21+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for CPILFESL",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:03+00:00",
   "last_obs": "2026-09-01"
  },
  "dfii10": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:21+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for DFII10",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:04+00:00",
   "last_obs": "2026-10-19"
  },
  "drtscilm": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:19+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for DRTSCILM",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-07-01"
  },
  "dtwexbgs": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:23+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for DTWEXBGS",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:05+00:00",
   "last_obs": "2026-10-16"
  },
  "dtwexm": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:23+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for DTWEXM",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:05+00:00",
   "last_obs": "2019-12-31"
  },
  "fedfunds": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:21+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for FEDFUNDS",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:03+00:00",
   "last_obs": "2026-09-01"
  },
  "gdp": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:18+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for GDP",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-04-01"
  },
  "jtsjol": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:25+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for JTSJOL",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:07+00:00",
   "last_obs": "2026-08-01"
  },
  "m2sl": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:19+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for M2SL",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-08-01"
  },
  "margin_debt": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:30+00:00",
+  "last_fetch": "2026-10-21T15:56:11+00:00",
   "last_obs": "2026-05-01"
  },
  "ncbeilq027s": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:18+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for NCBEILQ027S",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:01+00:00",
   "last_obs": "2026-04-01"
  },
  "payems": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:24+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for PAYEMS",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-09-01"
  },
  "ppiaco": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:24+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for PPIACO",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-09-01"
  },
  "rrpontsyd": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:20+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for RRPONTSYD",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:02+00:00",
   "last_obs": "2026-10-20"
  },
  "rsp": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:26+00:00",
+  "last_fetch": "2026-10-21T15:56:07+00:00",
   "last_obs": "2026-10-20"
  },
  "sahmrealtime": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:23+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for SAHMREALTIME",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:05+00:00",
   "last_obs": "2026-09-01"
  },
  "shiller_cape": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:30+00:00",
+  "last_fetch": "2026-10-21T15:56:11+00:00",
   "last_obs": "2026-07-01"
  },
  "spx": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:25+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for SP500",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:07+00:00",
   "last_obs": "2026-10-19"
  },
  "spy": {
   "error": null,
   "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:26+00:00",
+  "last_fetch": "2026-10-21T15:56:07+00:00",
   "last_obs": "2026-10-20"
  },
  "t10y2y": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:22+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for T10Y2Y",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:04+00:00",
   "last_obs": "2026-10-20"
  },
  "t10y3m": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:22+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for T10Y3M",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:04+00:00",
   "last_obs": "2026-10-20"
  },
  "unrate": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:25+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for UNRATE",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-09-01"
  },
  "usrec": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:24+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for USREC",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:06+00:00",
   "last_obs": "2026-09-01"
  },
  "vixcls": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:22+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for VIXCLS",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:05+00:00",
   "last_obs": "2026-10-19"
  },
  "walcl": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:20+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for WALCL",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:02+00:00",
   "last_obs": "2026-10-14"
  },
  "wtregen": {
-  "error": null,
-  "fetch_ok": true,
-  "last_fetch": "2026-10-20T23:57:20+00:00",
+  "error": "RuntimeError: FRED returned non-JSON body for WTREGEN",
+  "fetch_ok": false,
+  "last_fetch": "2026-10-21T15:56:02+00:00",
   "last_obs": "2026-10-14"
  }
 }
