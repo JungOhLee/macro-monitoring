@@ -1,7 +1,7 @@
 {
  "as_of": "2026-11-23",
  "engaged": true,
- "current_stage": 5,
+ "current_stage": 6,
  "stages": {
   "1": {
    "fired": true,
@@ -35,9 +35,9 @@
   },
   "6": {
    "fired": true,
-   "fired_date": "2026-03-31",
-   "lapsed": true,
-   "last_true": "2026-03-31"
+   "fired_date": "2026-11-23",
+   "lapsed": false,
+   "last_true": "2026-11-23"
   }
  }
 }
